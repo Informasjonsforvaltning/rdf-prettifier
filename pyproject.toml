@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "rdf-diff-store"
+version = "0.1.0"
+description = "Historical storage for rdf"
+authors = ["Digdir <fellesdatakatalog@digdir.no>"]
+homepage = "https://github.com/Informasjonsforvaltning/rdf-diff-store"
+readme = "README.md"
+license = "Apache-2.0"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.11"
+fastapi = "^0.82.0"
+uvicorn = {version = "^0.18.3"}
+GitPython = "^3.1.27"
+rdflib = "^6.2.0"
+
+[tool.poetry.dev-dependencies]
+
+
+[tool.pytest.ini_options]
+markers = [
+  "unit: marks tests as unit (fast)",
+  "integration: marks tests as integration (slower)",
+  "contract: marks test as contract (slow)",
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.run]
+source = ["rdf_diff_store"]
+
+[tool.coverage.report]
+fail_under = 100

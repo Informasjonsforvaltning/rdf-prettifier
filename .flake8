@@ -1,0 +1,26 @@
+[flake8]
+select = ANN,B,B9,BLK,C,D,DAR,E,F,I,N,RST,S,W
+ignore =
+    # Missing type annotation for self in method
+    ANN101,
+    # Dynamically typed expressions (typing.Any) are disallowed
+    ANN401,
+    # Additional newline in a group of imports. Conflict with I003.
+    I202
+per-file-ignores =
+    tests/*:
+      # Use of assert is ok in tests (AssertionError should be used in running code).
+      S101, 
+      # Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+      S311
+    # Generated code does not conform to standards.
+    rdf_diff_store/main.py: D100, D200, D400,
+    rdf_diff_store/models.py: D100, D101, D200, D400,
+max-line-length = 120
+import-order-style = google
+exclude =
+    .git,
+    .cache,
+    .mypy_cache,
+    __pycache__,
+    dist,

@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: rdf-diff-store
+  description: Historical storage for rdf
+  version: 0.1.0
+
+components:
+  securitySchemes:
+    APIKey:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+  schemas:
+    Error:
+      description: Error message
+      type: object
+      properties:
+        message:
+          type: string
+        error:
+          type: string
+    TemporalID:
+      description: ID of graph at specific time
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          description: Seconds since epoch
+          type: integer
+      required:
+        - id
+    Graph:
+      description: Graph
+      type: object
+      properties:
+        id:
+          type: string
+        format:
+          type: string
+        graph:
+          type: string
+      required:
+        - id
+        - graph
+
+paths:
+  /api/graphs:
+    get:
+      summary: Get graph at specific time
+      requestBody:
+        description: Graph ID
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TemporalID"
+      responses:
+        "200":
+          description: Ok
+          content:
+            text/turtle:
+              schema:
+                type: string
+          headers: {}
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          headers: {}
+    post:
+      summary: Store graph
+      security:
+        - APIKey: []
+      requestBody:
+        description: Graph
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Graph"
+      responses:
+        "200":
+          description: Ok
+          content: {}
+          headers: {}
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          headers: {}

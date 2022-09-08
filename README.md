@@ -13,7 +13,7 @@ poetry install
 Run locally:
 
 ```bash
-poetry run uvicorn rdf-diff-store.main:app --reload
+poetry run uvicorn rdf_diff_store.main:app --reload
 ```
 
 Generate code (after updating openapi spec):

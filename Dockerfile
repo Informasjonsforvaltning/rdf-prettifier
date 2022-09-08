@@ -15,8 +15,8 @@ COPY --from=requirements /tmp/requirements.txt ./
 
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY ./rdf-diff-store /app
+COPY ./rdf_diff_store /rdf_diff_store
 
 WORKDIR /
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "rdf_diff_store.main:app", "--host", "0.0.0.0", "--port", "80"]

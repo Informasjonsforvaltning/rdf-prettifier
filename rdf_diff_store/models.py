@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class Error(BaseModel):
+class HTTPError(BaseModel):
     message: Optional[str] = None
     error: Optional[str] = None
 

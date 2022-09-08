@@ -7,9 +7,10 @@ from __future__ import annotations
 from typing import Union
 
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 
 from .git import load_graph, store_graph
-from .models import Error, Graph, TemporalID
+from .models import HTTPError, Graph, TemporalID
 from .rdf import to_turtle
 
 app = FastAPI(
@@ -19,20 +20,34 @@ app = FastAPI(
 )
 
 
-@app.get("/api/graphs", response_model=str, responses={"500": {"model": Error}})
-def get_api_graphs(body: TemporalID) -> Union[str, Error]:
+@app.get("/api/graphs", response_model=None, responses={"500": {"model": HTTPError}})
+def get_api_graphs(body: TemporalID) -> Union[str, HTTPError]:
     """
     Get graph at specific time
     """
-    return load_graph(body.id)
+    try:
+        return PlainTextResponse(load_graph(body.id))
+    except Exception as e:
+        return HTTPError(error=e)
 
 
-@app.post("/api/graphs", response_model=None, responses={"500": {"model": Error}})
-def post_api_graphs(body: Graph) -> Union[None, Error]:
+@app.post("/api/graphs", response_model=None, responses={"500": {"model": HTTPError}})
+def post_api_graphs(body: Graph) -> Union[None, HTTPError]:
     """
     Store graph
     """
-    turtle = to_turtle(body.graph, body.format)
-    store_graph(body.id, turtle)
+    try:
+        turtle = to_turtle(body.graph, body.format)
+        store_graph(body.id, turtle)
+    except Exception as e:
+        return HTTPError(error=e)
 
-    return None
+
+@app.get("/livez")
+def get_livez() -> str:
+    return "ok"
+
+
+@app.get("/readyz")
+def get_readyz() -> str:
+    return "ok"

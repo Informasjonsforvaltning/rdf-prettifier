@@ -125,6 +125,22 @@ def integration(session: Session) -> None:
 
 
 @session(python=python_versions[0])
+def contract(session: Session) -> None:
+    """Run the integration test suite."""
+    args = session.posargs
+    session.install(".")
+    session.install("pytest", "pytest-docker", "requests")
+    # -rA shows extra test summary info regardless of test result
+    session.run(
+        "pytest",
+        "-m",
+        "contract",
+        "-rA",
+        *args,
+    )
+
+
+@session(python=python_versions[0])
 def coverage(session: Session) -> None:
     """Produce the coverage report."""
     args = session.posargs or ["report"]

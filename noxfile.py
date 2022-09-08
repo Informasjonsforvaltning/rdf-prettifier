@@ -78,7 +78,7 @@ def mypy(session: Session) -> None:
     """Type-check using mypy."""
     args = session.posargs or ["rdf_diff_store", "tests"]
     session.install(".")
-    session.install("mypy", "pytest")
+    session.install("mypy", "pytest", "types-requests")
     session.run("mypy", *args)
     # --python-executable to get nox/nox_poetry type information without installing in virtualenv.
     if not session.posargs:
@@ -130,7 +130,7 @@ def contract(session: Session) -> None:
     """Run the integration test suite."""
     args = session.posargs
     session.install(".")
-    session.install("pytest", "pytest-docker", "requests")
+    session.install("pytest", "pytest-docker", "requests", "types-requests")
     # -rA shows extra test summary info regardless of test result
     session.run(
         "pytest",

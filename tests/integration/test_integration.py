@@ -54,4 +54,4 @@ def test_update() -> None:
     body = TemporalID(
         id=graph_id,
     )
-    assert get_api_graphs(body) == dedent(update.graph).strip()
+    assert get_api_graphs(body).body.decode("utf-8") == dedent(update.graph).strip()

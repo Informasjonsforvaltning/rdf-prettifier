@@ -1,7 +1,10 @@
+"""Contract tests."""
+
 from textwrap import dedent
 
 import pytest
-import requests
+
+requests = pytest.importorskip("requests")
 
 
 @pytest.mark.contract

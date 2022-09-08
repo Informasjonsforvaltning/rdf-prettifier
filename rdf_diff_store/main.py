@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 
 from .git import load_graph, store_graph
-from .models import HTTPError, Graph, TemporalID
+from .models import Graph, HTTPError, TemporalID
 from .rdf import to_turtle
 
 app = FastAPI(
@@ -21,7 +21,7 @@ app = FastAPI(
 
 
 @app.get("/api/graphs", response_model=None, responses={"500": {"model": HTTPError}})
-def get_api_graphs(body: TemporalID) -> Union[str, HTTPError]:
+def get_api_graphs(body: TemporalID) -> Union[PlainTextResponse, HTTPError]:
     """
     Get graph at specific time
     """
@@ -39,15 +39,18 @@ def post_api_graphs(body: Graph) -> Union[None, HTTPError]:
     try:
         turtle = to_turtle(body.graph, body.format)
         store_graph(body.id, turtle)
+        return None
     except Exception as e:
         return HTTPError(error=e)
 
 
 @app.get("/livez")
 def get_livez() -> str:
+    """Endpoint for liveness probe."""
     return "ok"
 
 
 @app.get("/readyz")
 def get_readyz() -> str:
+    """Endpoint for readiness probe."""
     return "ok"

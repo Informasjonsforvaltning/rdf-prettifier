@@ -21,12 +21,15 @@ def test_livez(service: str) -> None:
 @pytest.mark.contract
 def test_store_graph(service: str) -> None:
     """Test graph storage."""
-    data = {"id": "007", "graph": """
+    data = {
+        "id": "007",
+        "graph": """
         @prefix si: <https://www.w3schools.com/rdf/> .
 
         <https://digdir.no/dataset/007> si:author "James Bond" ;
             si:title "The man!" .
-        """}
+        """,
+    }
     response = requests.post(f"{service}/api/graphs", json=data)
     assert response.status_code == 200
 

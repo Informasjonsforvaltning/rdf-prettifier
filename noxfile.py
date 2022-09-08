@@ -16,6 +16,7 @@ nox.options.sessions = (
     "safety",
     "unit",
     "integration",
+    "contract",
 )
 
 

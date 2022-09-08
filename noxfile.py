@@ -1,4 +1,5 @@
 """Nox sessions."""
+import os
 import sys
 
 import nox
@@ -43,6 +44,9 @@ def cache(session: Session) -> None:
 @session(python=python_versions[0])
 def black(session: Session) -> None:
     """Run black code formatter."""
+    if os.getenv("CI"):
+        print("Skipping black in CI")
+        return
     args = session.posargs or ["."]
     session.install("black")
     session.run("black", *args)

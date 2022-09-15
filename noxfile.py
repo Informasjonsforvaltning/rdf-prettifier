@@ -13,6 +13,7 @@ nox.options.sessions = (
     "black",
     "lint",
     "mypy",
+    "openapi",
     "safety",
     "unit",
     "integration",
@@ -20,15 +21,12 @@ nox.options.sessions = (
 )
 
 
-@session(python=python_versions)
-def codegen(session: Session) -> None:
-    """Generate code from API spec."""
-    # TODO: https://github.com/koxudaxi/fastapi-code-generator/issues/186
-    session.install("fastapi-code-generator")
-    session.run(
-        "fastapi-codegen", "--input", "openapi.yaml", "--output", "rdf_diff_store"
-    )
-    session.notify("black")
+@session(python=python_versions[0])
+def openapi(session: Session) -> None:
+    """Generate API spec from code."""
+    session.install(".")
+    session.install("PyYAML")
+    session.run("python", "openapi.py")
 
 
 @session(python=python_versions[0])
@@ -66,7 +64,6 @@ def lint(session: Session) -> None:
         "flake8-bugbear",
         "flake8-docstrings",
         "flake8-import-order",
-        "flake8-isort",
         "flake8-rst-docstrings",
         "pep8-naming",
     )

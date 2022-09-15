@@ -31,6 +31,20 @@ def graph_path(repo: Repo, filename: str) -> str:
     return os.path.join(str(repo.working_tree_dir), filename)
 
 
+def delete_graph(id: str) -> None:
+    """Delete graph."""
+    repo = get_repo()
+    filename = graph_filename(id)
+    path = graph_path(repo, filename)
+
+    try:
+        os.remove(path)
+        repo.index.remove([filename])
+        repo.index.commit(f"delete: {id}")
+    except FileNotFoundError:
+        pass
+
+
 def load_graph(id: str) -> str:
     """Load graph."""
     path = graph_path(get_repo(), graph_filename(id))

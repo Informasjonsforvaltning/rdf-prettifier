@@ -37,12 +37,9 @@ def delete_graph(id: str) -> None:
     filename = graph_filename(id)
     path = graph_path(repo, filename)
 
-    try:
-        os.remove(path)
-        repo.index.remove([filename])
-        repo.index.commit(f"delete: {id}")
-    except FileNotFoundError:
-        pass
+    os.remove(path)
+    repo.index.remove([filename])
+    repo.index.commit(f"delete: {id}")
 
 
 def load_graph(id: str) -> str:

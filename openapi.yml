@@ -105,8 +105,19 @@ paths:
         '200':
           content:
             application/json:
-              schema: {}
+              schema:
+                anyOf:
+                - type: string
+                - $ref: '#/components/schemas/Message'
+                - $ref: '#/components/schemas/HTTPError'
+                title: Response Delete Api Graphs Api Graphs Delete
           description: Successful Response
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: Not Found
         '422':
           content:
             application/json:

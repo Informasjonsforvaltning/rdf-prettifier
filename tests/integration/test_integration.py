@@ -24,7 +24,9 @@ def test_store_turtle() -> None:
             si:title "W3Schools" .
         """,
     )
-    assert post_api_graphs(graph) is None
+    r = Response()
+    assert post_api_graphs(graph, r) is None
+    assert r.status_code == 200
 
 
 @pytest.mark.integration
@@ -40,7 +42,9 @@ def test_update() -> None:
             si:title "W3Schools" .
         """,
     )
-    assert post_api_graphs(graph) is None
+    r = Response()
+    assert post_api_graphs(graph, r) is None
+    assert r.status_code == 200
 
     update = Graph(
         id=graph_id,
@@ -51,13 +55,16 @@ def test_update() -> None:
             si:title "W3Schools" .
         """,
     )
-    assert post_api_graphs(update) is None
+    r = Response()
+    assert post_api_graphs(update, r) is None
+    assert r.status_code == 200
 
     body = TemporalID(
         id=graph_id,
     )
     r = Response()
     response = get_api_graphs(body, r)
+    assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     assert response.body.decode("utf-8") == dedent(update.graph).strip()
 
@@ -75,20 +82,25 @@ def test_delete() -> None:
             si:title "W3Schools" .
         """,
     )
-    assert post_api_graphs(graph) is None
+    r = Response()
+    assert post_api_graphs(graph, r) is None
+    assert r.status_code == 200
 
     tid = TemporalID(
         id=graph_id,
     )
     r = Response()
     response = get_api_graphs(tid, r)
+    assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     assert response.body.decode("utf-8") == dedent(graph.graph).strip()
 
     id = ID(
         id=graph_id,
     )
-    assert delete_api_graphs(id) is None
+    r = Response()
+    assert delete_api_graphs(id, r) is None
+    assert r.status_code == 200
 
     r = Response()
     response = get_api_graphs(tid, r)
@@ -104,4 +116,8 @@ def test_delete_nonexisting() -> None:
     id = ID(
         id=graph_id,
     )
-    assert delete_api_graphs(id) is None
+    r = Response()
+    response = delete_api_graphs(id, r)
+    assert r.status_code == 404
+    assert isinstance(response, Message)
+    assert response == Message(message=f"No such graph: '{graph_id}'")

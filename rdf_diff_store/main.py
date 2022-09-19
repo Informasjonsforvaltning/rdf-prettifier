@@ -38,7 +38,7 @@ def get_api_graphs(
 
 
 @app.post("/api/graphs", response_model=None, responses={"500": {"model": HTTPError}})
-def post_api_graphs(body: Graph) -> Union[None, HTTPError]:
+def post_api_graphs(body: Graph, response: Response) -> Union[None, HTTPError]:
     """
     Store graph
     """
@@ -47,18 +47,27 @@ def post_api_graphs(body: Graph) -> Union[None, HTTPError]:
         store_graph(body.id, turtle)
         return None
     except Exception as e:
+        response.status_code = 500
         return HTTPError(error=str(e))
 
 
-@app.delete("/api/graphs", response_model=None, responses={"500": {"model": HTTPError}})
-def delete_api_graphs(body: ID) -> Union[None, HTTPError]:
+@app.delete(
+    "/api/graphs",
+    response_model=Union[None, Message, HTTPError],
+    responses={"404": {"model": Message}, "500": {"model": HTTPError}},
+)
+def delete_api_graphs(body: ID, response: Response) -> Union[None, Message, HTTPError]:
     """
     Delete graph
     """
     try:
         delete_graph(body.id)
         return None
+    except FileNotFoundError:
+        response.status_code = 404
+        return Message(message=f"No such graph: '{body.id}'")
     except Exception as e:
+        response.status_code = 500
         return HTTPError(error=str(e))
 
 

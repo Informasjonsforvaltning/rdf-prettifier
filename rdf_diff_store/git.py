@@ -1,6 +1,7 @@
 """Git."""
 
 import os
+from typing import Optional
 
 from git import Repo
 from git.exc import NoSuchPathError
@@ -11,6 +12,7 @@ def get_repo() -> Repo:
     repo_path = "repo"
     try:
         repo = Repo(repo_path)
+        repo.git.checkout("master")
     except NoSuchPathError:
         repo = Repo.init(repo_path)
 
@@ -42,9 +44,18 @@ def delete_graph(id: str) -> None:
     repo.index.commit(f"delete: {id}")
 
 
-def load_graph(id: str) -> str:
+def load_graph(id: str, timestamp: Optional[int]) -> str:
     """Load graph."""
-    path = graph_path(get_repo(), graph_filename(id))
+    repo = get_repo()
+
+    if timestamp:
+        # Ensure no code injection, don't trust python.
+        if not isinstance(timestamp, int):
+            raise ValueError("timestamp not an integer")
+        ref = repo.git.rev_list("--max-count", "1", "--before", f"{timestamp}", "HEAD")
+        repo.git.checkout(ref)
+
+    path = graph_path(repo, graph_filename(id))
 
     with open(path, "r") as f:
         return f.read()

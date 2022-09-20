@@ -28,7 +28,7 @@ def get_api_graphs(
     Get graph at specific time
     """
     try:
-        return PlainTextResponse(load_graph(body.id))
+        return PlainTextResponse(load_graph(body.id, body.timestamp))
     except FileNotFoundError:
         response.status_code = 404
         return Message(message=f"No such graph: '{body.id}'")

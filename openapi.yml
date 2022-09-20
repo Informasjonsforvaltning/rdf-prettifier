@@ -107,7 +107,6 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - type: string
                 - $ref: '#/components/schemas/Message'
                 - $ref: '#/components/schemas/HTTPError'
                 title: Response Delete Api Graphs Api Graphs Delete

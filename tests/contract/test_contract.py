@@ -66,12 +66,12 @@ def test_delete_graph(service: str) -> None:
     }
     response = requests.post(f"{service}/api/graphs", json=data)
 
-    data = {
+    id = {
         "id": "rm-rf",
     }
-    response = requests.delete(f"{service}/api/graphs", json=data)
+    response = requests.delete(f"{service}/api/graphs", json=id)
     assert response.status_code == 200
-    response = requests.get(f"{service}/api/graphs", json=data)
+    response = requests.get(f"{service}/api/graphs", json=id)
     assert response.status_code == 404
     assert response.content.decode("utf-8") == '{"message":"No such graph: \'rm-rf\'"}'
 

@@ -113,7 +113,7 @@ def test_get_at_timestamp(service: str) -> None:
         }
         response = requests.get(f"{service}/api/graphs", json=tid)
         assert response.status_code == 200
-        assert response.body.decode("utf-8") == dedent(graph["graph"]).strip()
+        assert response.content.decode("utf-8") == dedent(graph["graph"]).strip()
 
     tid = {
         "id": graph_id,
@@ -121,4 +121,7 @@ def test_get_at_timestamp(service: str) -> None:
     }
     response = requests.get(f"{service}/api/graphs", json=tid)
     assert response.status_code == 404
-    assert response.body.decode("utf-8") == f"No such graph: '{graph_id}'"
+    assert (
+        response.content.decode("utf-8")
+        == f'{{"message":"No such graph: \'{graph_id}\'"}}'
+    )

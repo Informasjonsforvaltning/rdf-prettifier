@@ -1,5 +1,6 @@
 """Git."""
 
+import base64
 import os
 
 from git import Repo
@@ -23,7 +24,13 @@ def get_repo() -> Repo:
 
 def graph_filename(id: str) -> str:
     """Filename of graph."""
-    return f"{id}.ttl"
+    valid_filename_chars = (
+        base64.b64encode(id.encode("utf-8"))
+        .decode("utf-8")
+        .replace("/", "_")
+        .replace("+", "-")
+    )
+    return f"{valid_filename_chars}.ttl"
 
 
 def graph_path(repo: Repo, filename: str) -> str:

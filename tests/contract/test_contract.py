@@ -26,7 +26,7 @@ def test_livez(service: str) -> None:
 def test_store_graph(service: str) -> None:
     """Test graph storage."""
     data = {
-        "id": "007",
+        "id": "<http://foo/bar¡@½@$}135[¥}¡35>",
         "graph": """
         @prefix si: <https://www.w3schools.com/rdf/> .
 
@@ -41,7 +41,7 @@ def test_store_graph(service: str) -> None:
 @pytest.mark.contract
 def test_load_graph(service: str) -> None:
     """Test graph retrieval."""
-    data = {"id": "007"}
+    data = {"id": "<http://foo/bar¡@½@$}135[¥}¡35>"}
     expected = """
         @prefix si: <https://www.w3schools.com/rdf/> .
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Union
+from typing import Optional, Union
 
 from fastapi import Depends, FastAPI, Response
 from fastapi.responses import PlainTextResponse
@@ -10,6 +10,7 @@ from .auth import get_api_key
 from .git import delete_graph, load_graph, store_graph
 from .models import Graph, HTTPError, ID, Message, TemporalID
 from .rdf import to_turtle
+from .sparql import query_sparql
 
 app = FastAPI(
     title="rdf-diff-store",
@@ -34,6 +35,42 @@ def get_api_graphs(
     except FileNotFoundError:
         response.status_code = 404
         return Message(message=f"No such graph: '{body.id}'")
+    except Exception as e:
+        response.status_code = 500
+        return HTTPError(error=str(e))
+
+
+@app.get(
+    "/api/sparql",
+    response_model=Union[str, HTTPError],
+    responses={"500": {"model": HTTPError}},
+)
+def get_api_sparql(
+    query: str, response: Response
+) -> Union[PlainTextResponse, HTTPError]:
+    """
+    Query current time with SparQL
+    """
+    try:
+        return PlainTextResponse(query_sparql(query, None))
+    except Exception as e:
+        response.status_code = 500
+        return HTTPError(error=str(e))
+
+
+@app.get(
+    "/api/sparql/{timestamp}",
+    response_model=Union[str, HTTPError],
+    responses={"500": {"model": HTTPError}},
+)
+def get_api_sparql_timestamp(
+    query: str, timestamp: Optional[int], response: Response
+) -> Union[PlainTextResponse, HTTPError]:
+    """
+    Query specific timestamp with SparQL
+    """
+    try:
+        return PlainTextResponse(query_sparql(query, timestamp))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))

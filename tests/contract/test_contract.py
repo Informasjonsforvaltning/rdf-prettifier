@@ -1,5 +1,7 @@
 """Contract tests."""
 
+from ast import literal_eval
+from math import ceil
 from textwrap import dedent
 import time
 
@@ -68,6 +70,38 @@ def test_load_graph(service: str) -> None:
         """
     response = requests.get(f"{service}/api/graphs", json=data)
     assert response.content.decode("utf-8") == dedent(expected).strip()
+
+
+@pytest.mark.contract
+def test_sparql_query(service: str) -> None:
+    """Test sparql query."""
+    q = (
+        "PREFIX%20si%3A%20%3Chttps%3A%2F%2Fwww.w3schools.com%2Frdf%2F%3E%0ASELECT%20*%20"
+        + "WHERE%20%7B%0A%20%20%3Chttps%3A%2F%2Fdigdir.no%2Fdataset%2F007%3E%20si%3Aauthor%20%3Fobj%20.%0A%7D%20"
+        + "LIMIT%2010"
+    )
+    response = requests.get(f"{service}/api/sparql?query={q}")
+    content = literal_eval(response.content.decode("utf-8"))
+    assert content["results"]["bindings"] == [
+        {"obj": {"type": "literal", "value": "James Bond"}}
+    ]
+    assert content["head"]["vars"] == ["obj"]
+
+
+@pytest.mark.contract
+def test_sparql_query_timestamp(service: str) -> None:
+    """Test sparql query with specific timestamp."""
+    q = (
+        "PREFIX%20si%3A%20%3Chttps%3A%2F%2Fwww.w3schools.com%2Frdf%2F%3E%0ASELECT%20*%20"
+        + "WHERE%20%7B%0A%20%20%3Chttps%3A%2F%2Fdigdir.no%2Fdataset%2F007%3E%20si%3Aauthor%20%3Fobj%20.%0A%7D%20"
+        + "LIMIT%2010"
+    )
+    response = requests.get(f"{service}/api/sparql/{ceil(time.time())}?query={q}")
+    content = literal_eval(response.content.decode("utf-8"))
+    assert content["results"]["bindings"] == [
+        {"obj": {"type": "literal", "value": "James Bond"}}
+    ]
+    assert content["head"]["vars"] == ["obj"]
 
 
 @pytest.mark.contract

@@ -206,6 +206,80 @@ paths:
       security:
       - APIKeyHeader: []
       summary: Post Api Graphs
+  /api/sparql:
+    get:
+      description: Query current time with SparQL
+      operationId: get_api_sparql_api_sparql_get
+      parameters:
+      - in: query
+        name: query
+        required: true
+        schema:
+          title: Query
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - type: string
+                - $ref: '#/components/schemas/HTTPError'
+                title: Response Get Api Sparql Api Sparql Get
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+          description: Internal Server Error
+      summary: Get Api Sparql
+  /api/sparql/{timestamp}:
+    get:
+      description: Query specific timestamp with SparQL
+      operationId: get_api_sparql_timestamp_api_sparql__timestamp__get
+      parameters:
+      - in: path
+        name: timestamp
+        required: true
+        schema:
+          title: Timestamp
+          type: integer
+      - in: query
+        name: query
+        required: true
+        schema:
+          title: Query
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - type: string
+                - $ref: '#/components/schemas/HTTPError'
+                title: Response Get Api Sparql Timestamp Api Sparql  Timestamp  Get
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+          description: Internal Server Error
+      summary: Get Api Sparql Timestamp
   /livez:
     get:
       description: Endpoint for liveness probe.

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import Union
 
-from fastapi import FastAPI, Response
+from fastapi import Depends, FastAPI, Response
 from fastapi.responses import PlainTextResponse
+from fastapi.security.api_key import APIKey
 
+from .auth import get_api_key
 from .git import delete_graph, load_graph, store_graph
 from .models import Graph, HTTPError, ID, Message, TemporalID
 from .rdf import to_turtle
@@ -38,7 +40,9 @@ def get_api_graphs(
 
 
 @app.post("/api/graphs", response_model=None, responses={"500": {"model": HTTPError}})
-def post_api_graphs(body: Graph, response: Response) -> Union[None, HTTPError]:
+def post_api_graphs(
+    body: Graph, response: Response, api_key: APIKey = Depends(get_api_key)
+) -> Union[None, HTTPError]:
     """
     Store graph
     """
@@ -56,7 +60,9 @@ def post_api_graphs(body: Graph, response: Response) -> Union[None, HTTPError]:
     response_model=Union[None, Message, HTTPError],
     responses={"404": {"model": Message}, "500": {"model": HTTPError}},
 )
-def delete_api_graphs(body: ID, response: Response) -> Union[None, Message, HTTPError]:
+def delete_api_graphs(
+    body: ID, response: Response, api_key: APIKey = Depends(get_api_key)
+) -> Union[None, Message, HTTPError]:
     """
     Delete graph
     """

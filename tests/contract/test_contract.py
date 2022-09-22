@@ -23,6 +23,22 @@ def test_livez(service: str) -> None:
 
 
 @pytest.mark.contract
+def test_store_graph_forbidden_when_missing_api_key(service: str) -> None:
+    """Test graph storage forbidden."""
+    data = {
+        "id": "<http://foo/bar¡@½@$}135[¥}¡35>",
+        "graph": """
+        @prefix si: <https://www.w3schools.com/rdf/> .
+
+        <https://digdir.no/dataset/007> si:author "James Bond" ;
+            si:title "The man!" .
+        """,
+    }
+    response = requests.post(f"{service}/api/graphs", json=data)
+    assert response.status_code == 403
+
+
+@pytest.mark.contract
 def test_store_graph(service: str) -> None:
     """Test graph storage."""
     data = {
@@ -34,7 +50,9 @@ def test_store_graph(service: str) -> None:
             si:title "The man!" .
         """,
     }
-    response = requests.post(f"{service}/api/graphs", json=data)
+    response = requests.post(
+        f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=data
+    )
     assert response.status_code == 200
 
 
@@ -53,6 +71,16 @@ def test_load_graph(service: str) -> None:
 
 
 @pytest.mark.contract
+def test_delete_graph_forbidden_when_missing_api_key(service: str) -> None:
+    """Test graph deletion."""
+    id = {
+        "id": "rm-rf",
+    }
+    response = requests.delete(f"{service}/api/graphs", json=id)
+    assert response.status_code == 403
+
+
+@pytest.mark.contract
 def test_delete_graph(service: str) -> None:
     """Test graph deletion."""
     data = {
@@ -64,12 +92,16 @@ def test_delete_graph(service: str) -> None:
             si:title "The man!" .
         """,
     }
-    response = requests.post(f"{service}/api/graphs", json=data)
+    response = requests.post(
+        f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=data
+    )
 
     id = {
         "id": "rm-rf",
     }
-    response = requests.delete(f"{service}/api/graphs", json=id)
+    response = requests.delete(
+        f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=id
+    )
     assert response.status_code == 200
     response = requests.get(f"{service}/api/graphs", json=id)
     assert response.status_code == 404
@@ -92,7 +124,9 @@ def test_get_at_timestamp(service: str) -> None:
                 si:title "W3Schools{i}" .
             """,
         }
-        response = requests.post(f"{service}/api/graphs", json=data)
+        response = requests.post(
+            f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=data
+        )
         assert response.status_code == 200
 
         graphs.append((data, time.time()))
@@ -101,7 +135,9 @@ def test_get_at_timestamp(service: str) -> None:
     id = {
         "id": graph_id,
     }
-    response = requests.delete(f"{service}/api/graphs", json=id)
+    response = requests.delete(
+        f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=id
+    )
     assert response.status_code == 200
     response = requests.get(f"{service}/api/graphs", json=id)
     assert response.status_code == 404

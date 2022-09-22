@@ -85,6 +85,11 @@ components:
       - type
       title: ValidationError
       type: object
+  securitySchemes:
+    APIKeyHeader:
+      in: header
+      name: X-API-KEY
+      type: apiKey
 info:
   description: Historical storage for rdf
   title: rdf-diff-store
@@ -129,6 +134,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
           description: Internal Server Error
+      security:
+      - APIKeyHeader: []
       summary: Delete Api Graphs
     get:
       description: Get graph at specific time
@@ -196,6 +203,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPError'
           description: Internal Server Error
+      security:
+      - APIKeyHeader: []
       summary: Post Api Graphs
   /livez:
     get:

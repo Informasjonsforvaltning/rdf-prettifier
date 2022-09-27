@@ -15,9 +15,9 @@ nox.options.sessions = (
     "mypy",
     "openapi",
     "safety",
-    "unit",
-    "integration",
-    "contract",
+    "unit_tests",
+    "integration_tests",
+    "contract_tests",
 )
 
 
@@ -83,7 +83,7 @@ def mypy(session: Session) -> None:
 
 
 @session(python=python_versions)
-def unit(session: Session) -> None:
+def unit_tests(session: Session) -> None:
     """Run the unit test suite."""
     args = session.posargs
     session.install(".")
@@ -103,7 +103,7 @@ def unit(session: Session) -> None:
 
 
 @session(python=python_versions)
-def integration(session: Session) -> None:
+def integration_tests(session: Session) -> None:
     """Run the integration test suite."""
     args = session.posargs
     session.install(".")
@@ -123,7 +123,7 @@ def integration(session: Session) -> None:
 
 
 @session(python=python_versions[0])
-def contract(session: Session) -> None:
+def contract_tests(session: Session) -> None:
     """Run the integration test suite."""
     args = session.posargs
     session.install(".")

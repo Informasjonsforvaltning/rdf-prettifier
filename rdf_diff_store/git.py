@@ -2,13 +2,13 @@
 
 import base64
 import os
-from typing import Optional
+from typing import Iterator, Optional
 
 from git import Repo
 from git.exc import NoSuchPathError
 
 
-def get_repo() -> Repo:
+def get_repo(timestamp: Optional[int] = None) -> Repo:
     """Get or create git repo."""
     repo_path = "repo"
     try:
@@ -21,7 +21,19 @@ def get_repo() -> Repo:
         git_config.set_value("user", "email", "fellesdatakatalog@digdir.no")
         git_config.set_value("user", "name", "rdf-diff-store")
 
+    if timestamp:
+        checkout_timestamp(repo, timestamp)
+
     return repo
+
+
+def checkout_timestamp(repo: Repo, timestamp: int) -> None:
+    """Checkout commit that matches a specific timestamp in repo."""
+    # Ensure no code injection, don't trust python.
+    if not isinstance(timestamp, int):
+        raise ValueError("timestamp not an integer")
+    ref = repo.git.rev_list("--max-count", "1", "--before", f"{timestamp}", "HEAD")
+    repo.git.checkout(ref)
 
 
 def graph_filename(id: str) -> str:
@@ -33,6 +45,11 @@ def graph_filename(id: str) -> str:
         .replace("+", "-")
     )
     return f"{valid_filename_chars}.ttl"
+
+
+def graphs_dir(repo: Repo) -> str:
+    """Dir containing graphs within repo."""
+    return str(repo.working_tree_dir)
 
 
 def graph_path(repo: Repo, filename: str) -> str:
@@ -53,19 +70,23 @@ def delete_graph(id: str) -> None:
 
 def load_graph(id: str, timestamp: Optional[int]) -> str:
     """Load graph."""
-    repo = get_repo()
-
-    if timestamp:
-        # Ensure no code injection, don't trust python.
-        if not isinstance(timestamp, int):
-            raise ValueError("timestamp not an integer")
-        ref = repo.git.rev_list("--max-count", "1", "--before", f"{timestamp}", "HEAD")
-        repo.git.checkout(ref)
-
+    repo = get_repo(timestamp)
     path = graph_path(repo, graph_filename(id))
 
     with open(path, "r") as f:
         return f.read()
+
+
+def load_all_graphs(timestamp: Optional[int]) -> Iterator[str]:
+    """Load all graph."""
+    repo = get_repo(timestamp)
+
+    for filename in os.listdir(graphs_dir(repo)):
+        try:
+            with open(graph_path(repo, filename), "r") as f:
+                yield f.read()
+        except IsADirectoryError:
+            pass
 
 
 def store_graph(id: str, graph: str) -> None:

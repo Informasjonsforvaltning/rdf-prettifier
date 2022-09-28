@@ -24,14 +24,14 @@ app = FastAPI(
     response_model=Union[str, Message, HTTPError],
     responses={"404": {"model": Message}, "500": {"model": HTTPError}},
 )
-def get_api_graphs(
+async def get_api_graphs(
     body: TemporalID, response: Response
 ) -> Union[PlainTextResponse, Message, HTTPError]:
     """
     Get graph at specific time
     """
     try:
-        return PlainTextResponse(load_graph(body.id, body.timestamp))
+        return PlainTextResponse(await load_graph(body.id, body.timestamp))
     except FileNotFoundError:
         response.status_code = 404
         return Message(message=f"No such graph: '{body.id}'")
@@ -45,14 +45,14 @@ def get_api_graphs(
     response_model=Union[str, HTTPError],
     responses={"500": {"model": HTTPError}},
 )
-def get_api_sparql(
+async def get_api_sparql(
     query: str, response: Response
 ) -> Union[PlainTextResponse, HTTPError]:
     """
     Query current time with SparQL
     """
     try:
-        return PlainTextResponse(query_sparql(query, None))
+        return PlainTextResponse(await query_sparql(query, None))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))
@@ -63,21 +63,21 @@ def get_api_sparql(
     response_model=Union[str, HTTPError],
     responses={"500": {"model": HTTPError}},
 )
-def get_api_sparql_timestamp(
+async def get_api_sparql_timestamp(
     query: str, timestamp: Optional[int], response: Response
 ) -> Union[PlainTextResponse, HTTPError]:
     """
     Query specific timestamp with SparQL
     """
     try:
-        return PlainTextResponse(query_sparql(query, timestamp))
+        return PlainTextResponse(await query_sparql(query, timestamp))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))
 
 
 @app.post("/api/graphs", response_model=None, responses={"500": {"model": HTTPError}})
-def post_api_graphs(
+async def post_api_graphs(
     body: Graph, response: Response, api_key: APIKey = Depends(get_api_key)
 ) -> Union[None, HTTPError]:
     """
@@ -85,7 +85,7 @@ def post_api_graphs(
     """
     try:
         turtle = to_turtle(body.graph, body.format)
-        store_graph(body.id, turtle)
+        await store_graph(body.id, turtle)
         return None
     except Exception as e:
         response.status_code = 500
@@ -97,14 +97,14 @@ def post_api_graphs(
     response_model=Union[None, Message, HTTPError],
     responses={"404": {"model": Message}, "500": {"model": HTTPError}},
 )
-def delete_api_graphs(
+async def delete_api_graphs(
     body: ID, response: Response, api_key: APIKey = Depends(get_api_key)
 ) -> Union[None, Message, HTTPError]:
     """
     Delete graph
     """
     try:
-        delete_graph(body.id)
+        await delete_graph(body.id)
         return None
     except FileNotFoundError:
         response.status_code = 404

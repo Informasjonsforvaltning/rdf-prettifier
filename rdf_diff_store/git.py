@@ -1,11 +1,30 @@
 """Git."""
 
+import asyncio
 import base64
+from contextlib import asynccontextmanager
+import fcntl
 import os
 from typing import Iterator, Optional
 
 from git import Repo
 from git.exc import NoSuchPathError
+
+
+def acquire_lock():
+    f = open("/rdf-diff-store.lock", "w")
+    fcntl.flock(f, fcntl.LOCK_EX)
+    return f
+
+
+@asynccontextmanager
+async def lock():
+    loop = asyncio.get_running_loop()
+    f = await loop.run_in_executor(None, acquire_lock)
+    try:
+        yield
+    finally:
+        f.close()
 
 
 def get_repo(timestamp: Optional[int] = None) -> Repo:
@@ -57,46 +76,51 @@ def graph_path(repo: Repo, filename: str) -> str:
     return os.path.join(str(repo.working_tree_dir), filename)
 
 
-def delete_graph(id: str) -> None:
+async def delete_graph(id: str) -> None:
     """Delete graph."""
-    repo = get_repo()
-    filename = graph_filename(id)
-    path = graph_path(repo, filename)
+    async with lock():
+        repo = get_repo()
+        filename = graph_filename(id)
+        path = graph_path(repo, filename)
 
-    os.remove(path)
-    repo.index.remove([filename])
-    repo.index.commit(f"delete: {id}")
+        os.remove(path)
+        repo.index.remove([filename])
+        repo.index.commit(f"delete: {id}")
 
 
-def load_graph(id: str, timestamp: Optional[int]) -> str:
+async def load_graph(id: str, timestamp: Optional[int]) -> str:
     """Load graph."""
-    repo = get_repo(timestamp)
-    path = graph_path(repo, graph_filename(id))
+    async with lock():
+        repo = get_repo(timestamp)
+        path = graph_path(repo, graph_filename(id))
 
-    with open(path, "r") as f:
-        return f.read()
+        with open(path, "r") as f:
+            return f.read()
 
 
-def load_all_graphs(timestamp: Optional[int]) -> Iterator[str]:
+async def load_all_graphs(timestamp: Optional[int]) -> Iterator[str]:
     """Load all graph."""
-    repo = get_repo(timestamp)
+    async with lock():
+        repo = get_repo(timestamp)
 
-    for filename in os.listdir(graphs_dir(repo)):
-        try:
-            with open(graph_path(repo, filename), "r") as f:
-                yield f.read()
-        except IsADirectoryError:
-            pass
+        for filename in os.listdir(graphs_dir(repo)):
+            try:
+                with open(graph_path(repo, filename), "r") as f:
+                    yield f.read()
+            except IsADirectoryError:
+                pass
 
 
-def store_graph(id: str, graph: str) -> None:
+async def store_graph(id: str, graph: str) -> None:
     """Store graph."""
-    repo = get_repo()
-    filename = graph_filename(id)
+    async with lock():
+        repo = get_repo()
+        filename = graph_filename(id)
 
-    path = graph_path(repo, filename)
-    with open(path, "w") as f:
-        f.write(graph)
+        path = graph_path(repo, filename)
+        with open(path, "w") as f:
+            f.write(graph)
 
-    repo.index.add([filename])
-    repo.index.commit(f"update: {id}")
+        repo.index.add([filename])
+        repo.index.commit(f"update: {id}")
+

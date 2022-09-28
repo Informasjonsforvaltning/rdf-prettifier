@@ -7,7 +7,7 @@ from rdflib import Graph
 from .git import load_all_graphs
 
 
-def query_sparql(query: str, timestamp: Optional[int] = None) -> str:
+async def query_sparql(query: str, timestamp: Optional[int] = None) -> str:
     """Query SparQL."""
     g = Graph()
 

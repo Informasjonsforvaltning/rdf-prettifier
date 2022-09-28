@@ -9,7 +9,7 @@ on:
 jobs:
   build-and-deploy-production:
     name: Deploy to prod on merge to main branch
-    uses: Informasjonsforvaltning/workflows/.github/workflows/build-deploy-nox.yaml@chore/hos/helm-deploy
+    uses: Informasjonsforvaltning/workflows/.github/workflows/build-deploy-nox.yaml@main
     with:
       app_name: fdk-rdf-diff-store
       python_version: "3.10"

@@ -97,7 +97,8 @@ def test_sparql_query_timestamp(service: str) -> None:
         + "LIMIT%2010"
     )
     response = requests.get(f"{service}/api/sparql/{ceil(time.time())}?query={q}")
-    content = literal_eval(response.content.decode("utf-8"))
+    raw_content = response.content.decode("utf-8")
+    content = literal_eval(raw_content)
     assert content["results"]["bindings"] == [
         {"obj": {"type": "literal", "value": "James Bond"}}
     ]

@@ -5,20 +5,26 @@ import base64
 from contextlib import asynccontextmanager
 import fcntl
 import os
-from typing import Iterator, Optional
+from typing import Any, AsyncGenerator, Optional
 
 from git import Repo
 from git.exc import NoSuchPathError
 
 
-def acquire_lock():
-    f = open("/rdf-diff-store.lock", "w")
+def acquire_lock() -> Any:
+    """Lock for git repo usage."""
+    f = open("rdf-diff-store-repo.lock", "w")
     fcntl.flock(f, fcntl.LOCK_EX)
     return f
 
 
 @asynccontextmanager
-async def lock():
+async def lock() -> Any:
+    """Lock.
+
+    with async lock():
+        # use repo
+    """
     loop = asyncio.get_running_loop()
     f = await loop.run_in_executor(None, acquire_lock)
     try:
@@ -98,7 +104,7 @@ async def load_graph(id: str, timestamp: Optional[int]) -> str:
             return f.read()
 
 
-async def load_all_graphs(timestamp: Optional[int]) -> Iterator[str]:
+async def load_all_graphs(timestamp: Optional[int]) -> AsyncGenerator[str, None]:
     """Load all graph."""
     async with lock():
         repo = get_repo(timestamp)
@@ -123,4 +129,3 @@ async def store_graph(id: str, graph: str) -> None:
 
         repo.index.add([filename])
         repo.index.commit(f"update: {id}")
-

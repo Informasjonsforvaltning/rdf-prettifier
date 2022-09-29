@@ -22,7 +22,8 @@ from rdf_diff_store.models import Graph, ID, Message, TemporalID
 
 
 @pytest.mark.integration
-def test_store_turtle() -> None:
+@pytest.mark.asyncio
+async def test_store_turtle() -> None:
     """Store graph."""
     graph_id = str(randrange(100000, 1000000))
     graph = Graph(
@@ -35,12 +36,13 @@ def test_store_turtle() -> None:
         """,
     )
     r = Response()
-    assert post_api_graphs(graph, r) is None
+    assert await post_api_graphs(graph, r) is None
     assert r.status_code == 200
 
 
 @pytest.mark.integration
-def test_update() -> None:
+@pytest.mark.asyncio
+async def test_update() -> None:
     """Update graph."""
     graph_id = str(randrange(100000, 1000000))
     graph = Graph(
@@ -53,7 +55,7 @@ def test_update() -> None:
         """,
     )
     r = Response()
-    assert post_api_graphs(graph, r) is None
+    assert await post_api_graphs(graph, r) is None
     assert r.status_code == 200
 
     update = Graph(
@@ -66,21 +68,22 @@ def test_update() -> None:
         """,
     )
     r = Response()
-    assert post_api_graphs(update, r) is None
+    assert await post_api_graphs(update, r) is None
     assert r.status_code == 200
 
     body = TemporalID(
         id=graph_id,
     )
     r = Response()
-    response = get_api_graphs(body, r)
+    response = await get_api_graphs(body, r)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     assert response.body.decode("utf-8") == dedent(update.graph).strip()
 
 
 @pytest.mark.integration
-def test_delete() -> None:
+@pytest.mark.asyncio
+async def test_delete() -> None:
     """Delete graph."""
     graph_id = str(randrange(100000, 1000000))
     graph = Graph(
@@ -93,14 +96,14 @@ def test_delete() -> None:
         """,
     )
     r = Response()
-    assert post_api_graphs(graph, r) is None
+    assert await post_api_graphs(graph, r) is None
     assert r.status_code == 200
 
     tid = TemporalID(
         id=graph_id,
     )
     r = Response()
-    response = get_api_graphs(tid, r)
+    response = await get_api_graphs(tid, r)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     assert response.body.decode("utf-8") == dedent(graph.graph).strip()
@@ -109,32 +112,34 @@ def test_delete() -> None:
         id=graph_id,
     )
     r = Response()
-    assert delete_api_graphs(id, r) is None
+    assert await delete_api_graphs(id, r) is None
     assert r.status_code == 200
 
     r = Response()
-    response = get_api_graphs(tid, r)
+    response = await get_api_graphs(tid, r)
     assert r.status_code == 404
     assert isinstance(response, Message)
     assert response == Message(message=f"No such graph: '{graph_id}'")
 
 
 @pytest.mark.integration
-def test_delete_nonexisting() -> None:
+@pytest.mark.asyncio
+async def test_delete_nonexisting() -> None:
     """Delete graph that does not exist."""
     graph_id = str(randrange(100000, 1000000))
     id = ID(
         id=graph_id,
     )
     r = Response()
-    response = delete_api_graphs(id, r)
+    response = await delete_api_graphs(id, r)
     assert r.status_code == 404
     assert isinstance(response, Message)
     assert response == Message(message=f"No such graph: '{graph_id}'")
 
 
 @pytest.mark.integration
-def test_get_at_timestamp() -> None:
+@pytest.mark.asyncio
+async def test_get_at_timestamp() -> None:
     """Get graph at specific time."""
     graphs = []
     graph_id = str(randrange(1000000, 10000000))
@@ -150,7 +155,7 @@ def test_get_at_timestamp() -> None:
             """,
         )
         r = Response()
-        assert post_api_graphs(graph, r) is None
+        assert await post_api_graphs(graph, r) is None
         assert r.status_code == 200
 
         graphs.append((graph, time.time()))
@@ -160,34 +165,37 @@ def test_get_at_timestamp() -> None:
         id=graph_id,
     )
     r = Response()
-    delete_api_graphs(id, r)
+    await delete_api_graphs(id, r)
     assert r.status_code == 200
     r = Response()
     tid = TemporalID(
         id=graph_id,
     )
-    get_api_graphs(tid, r)
+    await get_api_graphs(tid, r)
     assert r.status_code == 404
 
     for _i, (graph, t) in enumerate([*graphs, *graphs[::-1]]):
         r = Response()
         tid = TemporalID(id=graph_id, timestamp=t)
-        response = get_api_graphs(tid, r)
+        response = await get_api_graphs(tid, r)
         assert r.status_code == 200
         assert isinstance(response, PlainTextResponse)
         assert response.body.decode("utf-8") == dedent(graph.graph).strip()
 
     tid = TemporalID(id=graph_id, timestamp=time.time())
-    response = get_api_graphs(tid, r)
+    response = await get_api_graphs(tid, r)
     assert r.status_code == 404
     assert isinstance(response, Message)
     assert response == Message(message=f"No such graph: '{graph_id}'")
 
 
 @pytest.mark.integration
-def test_get_sparql() -> None:
+@pytest.mark.asyncio
+async def test_get_sparql() -> None:
     """
-    Test sparql endpoints. First create a static graph A, that is never updated.
+    Test sparql endpoints.
+
+    First create a static graph A, that is never updated.
     Then create graph B, update graph B and delete graph B. Assert that content
     of query is correct before and after B is updated, and after B is deleted.
     """
@@ -205,7 +213,7 @@ def test_get_sparql() -> None:
     )
 
     r = Response()
-    assert post_api_graphs(graph0, r) is None
+    assert await post_api_graphs(graph0, r) is None
     assert r.status_code == 200
 
     # Create v1 of graph B
@@ -220,7 +228,7 @@ def test_get_sparql() -> None:
         """,
     )
     r = Response()
-    assert post_api_graphs(graph1, r) is None
+    assert await post_api_graphs(graph1, r) is None
     assert r.status_code == 200
 
     # Time when graph B is in v1 (before B is updated)
@@ -239,7 +247,7 @@ def test_get_sparql() -> None:
         """,
     )
     r = Response()
-    assert post_api_graphs(graph2, r) is None
+    assert await post_api_graphs(graph2, r) is None
     assert r.status_code == 200
 
     # Time when graph B is in v2 (after B is updated)
@@ -252,13 +260,13 @@ def test_get_sparql() -> None:
         id=graph_id,
     )
     r = Response()
-    assert delete_api_graphs(id, r) is None
+    assert await delete_api_graphs(id, r) is None
     assert r.status_code == 200
 
     # Query without timestamp (after B is deleted) should yeld A
     q = f"""SELECT * WHERE {{<https://www.w3schools.com/{node_id}>?pred ?obj .}} LIMIT 10"""
     r = Response()
-    response = get_api_sparql(q, r)
+    response = await get_api_sparql(q, r)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     content = literal_eval(response.body.decode("utf-8"))
@@ -291,7 +299,7 @@ def test_get_sparql() -> None:
 
     # Query with timestamp t_v2 (after B is updated) should yield union of A and v2 of B
     r = Response()
-    response = get_api_sparql_timestamp(q, t_v2, r)
+    response = await get_api_sparql_timestamp(q, t_v2, r)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     content = literal_eval(response.body.decode("utf-8"))
@@ -338,7 +346,7 @@ def test_get_sparql() -> None:
 
     # Query with timestamp t_v1 (before B is updated) should yield union of A and v1 of B
     r = Response()
-    response = get_api_sparql_timestamp(q, t_v1, r)
+    response = await get_api_sparql_timestamp(q, t_v1, r)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     content = literal_eval(response.body.decode("utf-8"))

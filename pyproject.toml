@@ -36,6 +36,7 @@ pytest-docker = "^1.0.0"
 requests = "^2.28.1"
 types-requests = "^2.28.9"
 PyYAML = "^6.0"
+pytest-asyncio = "^0.19.0"
 
 
 [tool.pytest.ini_options]
@@ -43,6 +44,7 @@ markers = [
   "unit: marks tests as unit (fast)",
   "integration: marks tests as integration (slower)",
   "contract: marks test as contract (slow)",
+  "asyncio"
 ]
 
 [build-system]

@@ -6,3 +6,4 @@ dist/
 .coverage*
 repo/
 .idea
+rdf-diff-store-repo.lock

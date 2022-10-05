@@ -11,6 +11,9 @@ from git import Repo
 from git.exc import NoSuchPathError
 
 
+REPO_PATH = os.getenv("REPO_PATH", "repo")
+
+
 def acquire_lock() -> Any:
     """Lock for git repo usage."""
     f = open("rdf-diff-store-repo.lock", "w")
@@ -35,12 +38,11 @@ async def lock() -> Any:
 
 def get_repo(timestamp: Optional[int] = None) -> Repo:
     """Get or create git repo."""
-    repo_path = "repo"
     try:
-        repo = Repo(repo_path)
+        repo = Repo(REPO_PATH)
         repo.git.checkout("master")
     except NoSuchPathError:
-        repo = Repo.init(repo_path)
+        repo = Repo.init(REPO_PATH)
 
     with repo.config_writer() as git_config:
         git_config.set_value("user", "email", "fellesdatakatalog@digdir.no")

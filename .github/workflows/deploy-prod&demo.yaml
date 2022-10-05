@@ -26,7 +26,7 @@ jobs:
   deploy-to-demo:
     needs: build-and-deploy-production
     name: Deploy to demo if prod-deploy is successful
-    uses: Informasjonsforvaltning/workflows/.github/workflows/deploy.yaml@main
+    uses: Informasjonsforvaltning/workflows/.github/workflows/deploy-helm.yaml@main
     with:
       app_name: fdk-rdf-diff-store
       environment: demo

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import logging
 
 from typing import Optional, Union
@@ -22,7 +23,10 @@ app = FastAPI(
 
 # Dont log /livez and /readyz
 class EndpointFilter(logging.Filter):
+    """Filter."""
+
     def filter(self, record: logging.LogRecord) -> bool:
+        """Filter."""
         return (
             record.getMessage().find("/livez") == -1
             and record.getMessage().find("/readyz") == -1

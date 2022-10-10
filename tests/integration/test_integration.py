@@ -26,20 +26,25 @@ from rdf_diff_store.models import Graph, ID, Message, Metadata, TemporalID
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_metadata() -> None:
-    """Get metadata."""
-    # should be the same as REPO_PATH, but hardcoded to avoid fckups
+    """Test metadata.
+
+    Assert metadata empty is true and metadata start_time is None, then add
+    graph and assert empty is false and start_time equals current time.
+    Finally, assert metadata is unchanged when posting a graph update.
+    """
+    # WARNING: proceed with caution when modifying!! Delete existing repo.
+    # Should be the same as REPO_PATH, but hardcoded to avoid fckups.
     shutil.rmtree("diff-store-autodeleted-repo", ignore_errors=True)
 
     r = Response()
     meta = await get_api_metadata(r)
     assert isinstance(meta, Metadata)
-    assert meta.empty == True
-    assert meta.start_time == None
+    assert meta.empty
+    assert meta.start_time is None
 
-    time_pre = time.time_ns() / 1000000000
-    graph_id = str(randrange(100000, 1000000))
+    time_pre_graph_post = time.time_ns() / 1000000000
     graph = Graph(
-        id=graph_id,
+        id=str(randrange(100000, 1000000)),
         graph="""
         @prefix si: <https://www.w3schools.com/rdf/> .
 
@@ -54,9 +59,13 @@ async def test_metadata() -> None:
     r = Response()
     meta = await get_api_metadata(r)
     assert isinstance(meta, Metadata)
-    assert meta.empty == False
+    assert not meta.empty
     assert isinstance(meta.start_time, int)
-    assert floor(time_pre) <= meta.start_time <= ceil(time.time_ns() / 1000000000)
+    assert (
+        floor(time_pre_graph_post)
+        <= meta.start_time
+        <= ceil(time.time_ns() / 1000000000)
+    )
 
     time.sleep(1)
 

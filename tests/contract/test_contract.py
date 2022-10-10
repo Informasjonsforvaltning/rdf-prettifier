@@ -66,8 +66,10 @@ def test_get_metadata(service: str) -> None:
         headers={"X-API-KEY": "test-key"},
     )
     assert response.status_code == 200
-    content = literal_eval(response.content.decode("utf-8"))
-    assert content["empty"] == False
+    print(response.content.decode("utf-8"))
+    # literal_eval does not fancy 'false' in json, but rather 'False'
+    content = literal_eval(response.content.decode("utf-8").replace("false", "False"))
+    assert not content["empty"]
     assert 1665409969 < content["start_time"] < 2065409969
 
 

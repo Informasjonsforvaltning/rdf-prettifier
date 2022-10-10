@@ -16,7 +16,7 @@ class Message(BaseModel):
 
 class Metadata(BaseModel):
     empty: bool
-    start_time: Optional[int]
+    start_time: Optional[int] = Field(None, description="Seconds since epoch")
 
 
 class ID(BaseModel):

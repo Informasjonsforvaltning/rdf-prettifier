@@ -8,7 +8,7 @@ import os
 from typing import Any, AsyncGenerator, Optional
 
 from git import Repo
-from git.exc import NoSuchPathError, GitCommandError
+from git.exc import GitCommandError, NoSuchPathError
 
 from rdf_diff_store.models import Metadata
 
@@ -45,10 +45,11 @@ def get_repo(timestamp: Optional[int] = None) -> Repo:
         try:
             repo.git.checkout("master")
         except GitCommandError as e:
-            # exception is ok if error is the following (because no commits made to master yet)
+            # exception is ok if error is the following
+            # (because no commits has been made to master yet).
             if (
-                not "error: pathspec 'master' did not match any file(s) known to git"
-                in f"{e}"
+                "error: pathspec 'master' did not match any file(s) known to git"
+                not in f"{e}"
             ):
                 raise e
     except NoSuchPathError:

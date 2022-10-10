@@ -4,6 +4,6 @@ __pycache__/
 dist/
 .python-version
 .coverage*
-repo/
+diff-store-autodeleted-repo/
 .idea
 rdf-diff-store-repo.lock

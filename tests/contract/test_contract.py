@@ -59,6 +59,19 @@ def test_store_graph(service: str) -> None:
 
 
 @pytest.mark.contract
+def test_get_metadata(service: str) -> None:
+    """Test graph metdata."""
+    response = requests.get(
+        f"{service}/api/metadata",
+        headers={"X-API-KEY": "test-key"},
+    )
+    assert response.status_code == 200
+    content = literal_eval(response.content.decode("utf-8"))
+    assert content["empty"] == False
+    assert 1665409969 < content["start_time"] < 2065409969
+
+
+@pytest.mark.contract
 def test_load_graph(service: str) -> None:
     """Test graph retrieval."""
     data = {"id": "<http://foo/bar¡@½@$}135[¥}¡35>"}

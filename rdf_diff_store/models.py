@@ -14,6 +14,11 @@ class Message(BaseModel):
     message: Optional[str] = None
 
 
+class Metadata(BaseModel):
+    empty: bool
+    start_time: Optional[int]
+
+
 class ID(BaseModel):
     id: str
 

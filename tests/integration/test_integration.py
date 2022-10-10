@@ -1,8 +1,9 @@
 """Integration tests."""
 
 from ast import literal_eval
-from math import ceil
+from math import ceil, floor
 from random import randrange
+import shutil
 from textwrap import dedent
 import time
 from typing import Any, Dict, List
@@ -14,11 +15,58 @@ import pytest
 from rdf_diff_store.main import (
     delete_api_graphs,
     get_api_graphs,
+    get_api_metadata,
     get_api_sparql,
     get_api_sparql_timestamp,
     post_api_graphs,
 )
-from rdf_diff_store.models import Graph, ID, Message, TemporalID
+from rdf_diff_store.models import Graph, ID, Message, Metadata, TemporalID
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_metadata() -> None:
+    """Get metadata."""
+    # should be the same as REPO_PATH, but hardcoded to avoid fckups
+    shutil.rmtree("diff-store-autodeleted-repo", ignore_errors=True)
+
+    r = Response()
+    meta = await get_api_metadata(r)
+    assert isinstance(meta, Metadata)
+    assert meta.empty == True
+    assert meta.start_time == None
+
+    time_pre = time.time_ns() / 1000000000
+    graph_id = str(randrange(100000, 1000000))
+    graph = Graph(
+        id=graph_id,
+        graph="""
+        @prefix si: <https://www.w3schools.com/rdf/> .
+
+        <https://www.w3schools.com> si:author "Jan Egil Refsnes" ;
+            si:title "W3Schools" .
+        """,
+    )
+    r = Response()
+    assert await post_api_graphs(graph, r) is None
+    assert r.status_code == 200
+
+    r = Response()
+    meta = await get_api_metadata(r)
+    assert isinstance(meta, Metadata)
+    assert meta.empty == False
+    assert isinstance(meta.start_time, int)
+    assert floor(time_pre) <= meta.start_time <= ceil(time.time_ns() / 1000000000)
+
+    time.sleep(1)
+
+    r = Response()
+    assert await post_api_graphs(graph, r) is None
+
+    r = Response()
+    newmeta = await get_api_metadata(r)
+    assert isinstance(meta, Metadata)
+    assert newmeta == meta
 
 
 @pytest.mark.integration

@@ -8,8 +8,8 @@ from fastapi.responses import PlainTextResponse
 from fastapi.security.api_key import APIKey
 
 from .auth import get_api_key
-from .git import delete_graph, load_graph, store_graph
-from .models import Graph, HTTPError, ID, Message, TemporalID
+from .git import delete_graph, load_graph, repo_metadata, store_graph
+from .models import Graph, HTTPError, ID, Message, Metadata, TemporalID
 from .rdf import to_turtle
 from .sparql import query_sparql
 
@@ -122,6 +122,22 @@ async def delete_api_graphs(
     except FileNotFoundError:
         response.status_code = 404
         return Message(message=f"No such graph: '{body.id}'")
+    except Exception as e:
+        response.status_code = 500
+        return HTTPError(error=str(e))
+
+
+@app.get(
+    "/api/metadata",
+    response_model=Union[Metadata, HTTPError],
+    responses={"500": {"model": HTTPError}},
+)
+async def get_api_metadata(response: Response) -> Union[Metadata, HTTPError]:
+    """
+    Get diff-store metadata.
+    """
+    try:
+        return await repo_metadata()
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))

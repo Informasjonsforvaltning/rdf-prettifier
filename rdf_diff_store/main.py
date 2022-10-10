@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 
 from typing import Optional, Union
 
@@ -17,6 +18,18 @@ app = FastAPI(
     description="Historical storage for rdf",
     version="0.1.0",
 )
+
+
+# Dont log /livez and /readyz
+class EndpointFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return (
+            record.getMessage().find("/livez") == -1
+            and record.getMessage().find("/readyz") == -1
+        )
+
+
+logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 
 @app.get(

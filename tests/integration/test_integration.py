@@ -1,8 +1,9 @@
 """Integration tests."""
 
 from ast import literal_eval
-from math import ceil
+from math import ceil, floor
 from random import randrange
+import shutil
 from textwrap import dedent
 import time
 from typing import Any, Dict, List
@@ -14,11 +15,67 @@ import pytest
 from rdf_diff_store.main import (
     delete_api_graphs,
     get_api_graphs,
+    get_api_metadata,
     get_api_sparql,
     get_api_sparql_timestamp,
     post_api_graphs,
 )
-from rdf_diff_store.models import Graph, ID, Message, TemporalID
+from rdf_diff_store.models import Graph, ID, Message, Metadata, TemporalID
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_metadata() -> None:
+    """Test metadata.
+
+    Assert metadata empty is true and metadata start_time is None, then add
+    graph and assert empty is false and start_time equals current time.
+    Finally, assert metadata is unchanged when posting a graph update.
+    """
+    # WARNING: proceed with caution when modifying!! Delete existing repo.
+    # Should be the same as REPO_PATH, but hardcoded to avoid fckups.
+    shutil.rmtree("diff-store-autodeleted-repo", ignore_errors=True)
+
+    r = Response()
+    meta = await get_api_metadata(r)
+    assert isinstance(meta, Metadata)
+    assert meta.empty
+    assert meta.start_time is None
+
+    time_pre_graph_post = time.time_ns() / 1000000000
+    graph = Graph(
+        id=str(randrange(100000, 1000000)),
+        graph="""
+        @prefix si: <https://www.w3schools.com/rdf/> .
+
+        <https://www.w3schools.com> si:author "Jan Egil Refsnes" ;
+            si:title "W3Schools" .
+        """,
+    )
+    r = Response()
+    assert await post_api_graphs(graph, r) is None
+    assert r.status_code == 200
+
+    r = Response()
+    meta = await get_api_metadata(r)
+    assert isinstance(meta, Metadata)
+    assert not meta.empty
+    assert isinstance(meta.start_time, int)
+    assert (
+        floor(time_pre_graph_post)
+        <= meta.start_time
+        <= ceil(time.time_ns() / 1000000000)
+    )
+
+    time.sleep(1)
+
+    r = Response()
+    assert await post_api_graphs(graph, r) is None
+
+    r = Response()
+    newmeta = await get_api_metadata(r)
+    assert isinstance(meta, Metadata)
+    assert newmeta == meta
 
 
 @pytest.mark.integration

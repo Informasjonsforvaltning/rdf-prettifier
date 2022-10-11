@@ -51,6 +51,19 @@ components:
           type: string
       title: Message
       type: object
+    Metadata:
+      properties:
+        empty:
+          title: Empty
+          type: boolean
+        start_time:
+          description: Seconds since epoch
+          title: Start Time
+          type: integer
+      required:
+      - empty
+      title: Metadata
+      type: object
     TemporalID:
       properties:
         id:
@@ -206,6 +219,27 @@ paths:
       security:
       - APIKeyHeader: []
       summary: Post Api Graphs
+  /api/metadata:
+    get:
+      description: Get diff-store metadata.
+      operationId: get_api_metadata_api_metadata_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/Metadata'
+                - $ref: '#/components/schemas/HTTPError'
+                title: Response Get Api Metadata Api Metadata Get
+          description: Successful Response
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+          description: Internal Server Error
+      summary: Get Api Metadata
   /api/sparql:
     get:
       description: Query current time with SparQL

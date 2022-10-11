@@ -8,10 +8,12 @@ import os
 from typing import Any, AsyncGenerator, Optional
 
 from git import Repo
-from git.exc import NoSuchPathError
+from git.exc import GitCommandError, NoSuchPathError
+
+from rdf_diff_store.models import Metadata
 
 
-REPO_PATH = os.getenv("REPO_PATH", "repo")
+REPO_PATH = os.getenv("REPO_PATH", "diff-store-autodeleted-repo")
 
 
 def acquire_lock() -> Any:
@@ -40,7 +42,16 @@ def get_repo(timestamp: Optional[int] = None) -> Repo:
     """Get or create git repo."""
     try:
         repo = Repo(REPO_PATH)
-        repo.git.checkout("master")
+        try:
+            repo.git.checkout("master")
+        except GitCommandError as e:
+            # exception is ok if error is the following
+            # (because no commits has been made to master yet).
+            if (
+                "error: pathspec 'master' did not match any file(s) known to git"
+                not in f"{e}"
+            ):
+                raise e
     except NoSuchPathError:
         repo = Repo.init(REPO_PATH)
 
@@ -131,3 +142,18 @@ async def store_graph(id: str, graph: str) -> None:
 
         repo.index.add([filename])
         repo.index.commit(f"update: {id}")
+
+
+async def repo_metadata() -> Metadata:
+    """Get diff store metadata."""
+    async with lock():
+        repo = get_repo()
+        try:
+            *_, first = repo.iter_commits()
+            return Metadata(
+                empty=False,
+                start_time=first.committed_date,
+            )
+        # no commits in repo
+        except ValueError:
+            return Metadata(empty=True)

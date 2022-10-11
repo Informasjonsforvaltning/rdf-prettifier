@@ -453,14 +453,14 @@ async def test_get_sparql() -> None:
 @pytest.mark.asyncio
 async def test_prehistoric_get_sparql() -> None:
     """
-    Test sparql endpoint with timestamp earlier than fist commit.
+    Test sparql endpoint with timestamp earlier than first commit.
     """
 
-    q = f"""SELECT * WHERE LIMIT 10"""
+    q = f"""SELECT * WHERE {{?s ?p ?o .}} LIMIT 10"""
     r = Response()
     response = await get_api_sparql_timestamp(q, 10, r)
+    print(response)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     content = literal_eval(response.body.decode("utf-8"))
-    print(content)
-    assert False
+    assert content['results']['bindings'] == []

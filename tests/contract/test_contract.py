@@ -4,6 +4,7 @@ from ast import literal_eval
 from math import ceil
 from textwrap import dedent
 import time
+from urllib.parse import quote
 
 import pytest
 
@@ -66,7 +67,6 @@ def test_get_metadata(service: str) -> None:
         headers={"X-API-KEY": "test-key"},
     )
     assert response.status_code == 200
-    print(response.content.decode("utf-8"))
     # literal_eval does not fancy 'false' in json, but rather 'False'
     content = literal_eval(response.content.decode("utf-8").replace("false", "False"))
     assert not content["empty"]
@@ -76,14 +76,14 @@ def test_get_metadata(service: str) -> None:
 @pytest.mark.contract
 def test_load_graph(service: str) -> None:
     """Test graph retrieval."""
-    data = {"id": "<http://foo/bar¡@½@$}135[¥}¡35>"}
+    graph_id = "<http://foo/bar¡@½@$}135[¥}¡35>"
     expected = """
         @prefix si: <https://www.w3schools.com/rdf/> .
 
         <https://digdir.no/dataset/007> si:author "James Bond" ;
             si:title "The man!" .
         """
-    response = requests.get(f"{service}/api/graphs", json=data)
+    response = requests.get(f"{service}/api/graphs?id={quote(graph_id)}")
     assert response.content.decode("utf-8") == dedent(expected).strip()
 
 
@@ -123,10 +123,7 @@ def test_sparql_query_timestamp(service: str) -> None:
 @pytest.mark.contract
 def test_delete_graph_forbidden_when_missing_api_key(service: str) -> None:
     """Test graph deletion."""
-    id = {
-        "id": "rm-rf",
-    }
-    response = requests.delete(f"{service}/api/graphs", json=id)
+    response = requests.delete(f"{service}/api/graphs?id=rm-rf")
     assert response.status_code == 403
 
 
@@ -146,14 +143,12 @@ def test_delete_graph(service: str) -> None:
         f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=data
     )
 
-    id = {
-        "id": "rm-rf",
-    }
+    graph_id = quote("rm-rf")
     response = requests.delete(
-        f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=id
+        f"{service}/api/graphs?id={graph_id}", headers={"X-API-KEY": "test-key"}
     )
     assert response.status_code == 200
-    response = requests.get(f"{service}/api/graphs", json=id)
+    response = requests.get(f"{service}/api/graphs?id={graph_id}")
     assert response.status_code == 404
     assert response.content.decode("utf-8") == '{"message":"No such graph: \'rm-rf\'"}'
 
@@ -179,33 +174,22 @@ def test_get_at_timestamp(service: str) -> None:
         )
         assert response.status_code == 200
 
-        graphs.append((data, time.time()))
+        graphs.append((data, int(time.time())))
         time.sleep(2)
 
-    id = {
-        "id": graph_id,
-    }
     response = requests.delete(
-        f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=id
+        f"{service}/api/graphs?id={graph_id}", headers={"X-API-KEY": "test-key"}
     )
     assert response.status_code == 200
-    response = requests.get(f"{service}/api/graphs", json=id)
+    response = requests.get(f"{service}/api/graphs?id={graph_id}")
     assert response.status_code == 404
 
     for _i, (graph, t) in enumerate([*graphs, *graphs[::-1]]):
-        tid = {
-            "id": graph_id,
-            "timestamp": t,
-        }
-        response = requests.get(f"{service}/api/graphs", json=tid)
+        response = requests.get(f"{service}/api/graphs/{t}?id={graph_id}")
         assert response.status_code == 200
         assert response.content.decode("utf-8") == dedent(graph["graph"]).strip()
 
-    tid = {
-        "id": graph_id,
-        "timestamp": time.time(),
-    }
-    response = requests.get(f"{service}/api/graphs", json=tid)
+    response = requests.get(f"{service}/api/graphs/{int(time.time())}?id={graph_id}")
     assert response.status_code == 404
     assert (
         response.content.decode("utf-8")

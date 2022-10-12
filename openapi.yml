@@ -35,15 +35,6 @@ components:
           type: array
       title: HTTPValidationError
       type: object
-    ID:
-      properties:
-        id:
-          title: Id
-          type: string
-      required:
-      - id
-      title: ID
-      type: object
     Message:
       properties:
         message:
@@ -63,19 +54,6 @@ components:
       required:
       - empty
       title: Metadata
-      type: object
-    TemporalID:
-      properties:
-        id:
-          title: Id
-          type: string
-        timestamp:
-          description: Seconds since epoch
-          title: Timestamp
-          type: integer
-      required:
-      - id
-      title: TemporalID
       type: object
     ValidationError:
       properties:
@@ -111,14 +89,15 @@ openapi: 3.0.2
 paths:
   /api/graphs:
     delete:
-      description: Delete graph
+      description: Delete graph.
       operationId: delete_api_graphs_api_graphs_delete
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ID'
+      parameters:
+      - in: query
+        name: id
         required: true
+        schema:
+          title: Id
+          type: string
       responses:
         '200':
           content:
@@ -151,14 +130,15 @@ paths:
       - APIKeyHeader: []
       summary: Delete Api Graphs
     get:
-      description: Get graph at specific time
+      description: Get current graph.
       operationId: get_api_graphs_api_graphs_get
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TemporalID'
+      parameters:
+      - in: query
+        name: id
         required: true
+        schema:
+          title: Id
+          type: string
       responses:
         '200':
           content:
@@ -190,7 +170,7 @@ paths:
           description: Internal Server Error
       summary: Get Api Graphs
     post:
-      description: Store graph
+      description: Store graph.
       operationId: post_api_graphs_api_graphs_post
       requestBody:
         content:
@@ -219,6 +199,53 @@ paths:
       security:
       - APIKeyHeader: []
       summary: Post Api Graphs
+  /api/graphs/{timestamp}:
+    get:
+      description: Get graph at specific time.
+      operationId: get_api_graphs_timestamp_api_graphs__timestamp__get
+      parameters:
+      - in: path
+        name: timestamp
+        required: true
+        schema:
+          title: Timestamp
+          type: integer
+      - in: query
+        name: id
+        required: true
+        schema:
+          title: Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - type: string
+                - $ref: '#/components/schemas/Message'
+                - $ref: '#/components/schemas/HTTPError'
+                title: Response Get Api Graphs Timestamp Api Graphs  Timestamp  Get
+          description: Successful Response
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+          description: Internal Server Error
+      summary: Get Api Graphs Timestamp
   /api/metadata:
     get:
       description: Get diff-store metadata.
@@ -242,7 +269,7 @@ paths:
       summary: Get Api Metadata
   /api/sparql:
     get:
-      description: Query current time with SparQL
+      description: Query current time with SparQL.
       operationId: get_api_sparql_api_sparql_get
       parameters:
       - in: query
@@ -276,7 +303,7 @@ paths:
       summary: Get Api Sparql
   /api/sparql/{timestamp}:
     get:
-      description: Query specific timestamp with SparQL
+      description: Query specific timestamp with SparQL.
       operationId: get_api_sparql_timestamp_api_sparql__timestamp__get
       parameters:
       - in: path

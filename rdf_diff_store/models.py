@@ -19,15 +19,6 @@ class Metadata(BaseModel):
     start_time: Optional[int] = Field(None, description="Seconds since epoch")
 
 
-class ID(BaseModel):
-    id: str
-
-
-class TemporalID(BaseModel):
-    id: str
-    timestamp: Optional[int] = Field(None, description="Seconds since epoch")
-
-
 class Graph(BaseModel):
     id: str
     format: Optional[str] = None

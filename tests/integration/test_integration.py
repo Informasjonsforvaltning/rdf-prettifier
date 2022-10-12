@@ -15,12 +15,13 @@ import pytest
 from rdf_diff_store.main import (
     delete_api_graphs,
     get_api_graphs,
+    get_api_graphs_timestamp,
     get_api_metadata,
     get_api_sparql,
     get_api_sparql_timestamp,
     post_api_graphs,
 )
-from rdf_diff_store.models import Graph, ID, Message, Metadata, TemporalID
+from rdf_diff_store.models import Graph, Message, Metadata
 
 
 @pytest.mark.integration
@@ -53,7 +54,7 @@ async def test_metadata() -> None:
         """,
     )
     r = Response()
-    assert await post_api_graphs(graph, r) is None
+    assert await post_api_graphs(r, graph) is None
     assert r.status_code == 200
 
     r = Response()
@@ -70,7 +71,7 @@ async def test_metadata() -> None:
     time.sleep(1)
 
     r = Response()
-    assert await post_api_graphs(graph, r) is None
+    assert await post_api_graphs(r, graph) is None
 
     r = Response()
     newmeta = await get_api_metadata(r)
@@ -93,7 +94,7 @@ async def test_store_turtle() -> None:
         """,
     )
     r = Response()
-    assert await post_api_graphs(graph, r) is None
+    assert await post_api_graphs(r, graph) is None
     assert r.status_code == 200
 
 
@@ -112,7 +113,7 @@ async def test_update() -> None:
         """,
     )
     r = Response()
-    assert await post_api_graphs(graph, r) is None
+    assert await post_api_graphs(r, graph) is None
     assert r.status_code == 200
 
     update = Graph(
@@ -125,14 +126,11 @@ async def test_update() -> None:
         """,
     )
     r = Response()
-    assert await post_api_graphs(update, r) is None
+    assert await post_api_graphs(r, update) is None
     assert r.status_code == 200
 
-    body = TemporalID(
-        id=graph_id,
-    )
     r = Response()
-    response = await get_api_graphs(body, r)
+    response = await get_api_graphs(r, graph_id)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     assert response.body.decode("utf-8") == dedent(update.graph).strip()
@@ -153,27 +151,21 @@ async def test_delete() -> None:
         """,
     )
     r = Response()
-    assert await post_api_graphs(graph, r) is None
+    assert await post_api_graphs(r, graph) is None
     assert r.status_code == 200
 
-    tid = TemporalID(
-        id=graph_id,
-    )
     r = Response()
-    response = await get_api_graphs(tid, r)
+    response = await get_api_graphs(r, graph_id)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     assert response.body.decode("utf-8") == dedent(graph.graph).strip()
 
-    id = ID(
-        id=graph_id,
-    )
     r = Response()
-    assert await delete_api_graphs(id, r) is None
+    assert await delete_api_graphs(r, graph_id) is None
     assert r.status_code == 200
 
     r = Response()
-    response = await get_api_graphs(tid, r)
+    response = await get_api_graphs(r, graph_id)
     assert r.status_code == 404
     assert isinstance(response, Message)
     assert response == Message(message=f"No such graph: '{graph_id}'")
@@ -184,11 +176,8 @@ async def test_delete() -> None:
 async def test_delete_nonexisting() -> None:
     """Delete graph that does not exist."""
     graph_id = str(randrange(100000, 1000000))
-    id = ID(
-        id=graph_id,
-    )
     r = Response()
-    response = await delete_api_graphs(id, r)
+    response = await delete_api_graphs(r, graph_id)
     assert r.status_code == 404
     assert isinstance(response, Message)
     assert response == Message(message=f"No such graph: '{graph_id}'")
@@ -212,35 +201,27 @@ async def test_get_at_timestamp() -> None:
             """,
         )
         r = Response()
-        assert await post_api_graphs(graph, r) is None
+        assert await post_api_graphs(r, graph) is None
         assert r.status_code == 200
 
-        graphs.append((graph, time.time()))
+        graphs.append((graph, int(time.time())))
         time.sleep(2)
 
-    id = ID(
-        id=graph_id,
-    )
     r = Response()
-    await delete_api_graphs(id, r)
+    await delete_api_graphs(r, graph_id)
     assert r.status_code == 200
     r = Response()
-    tid = TemporalID(
-        id=graph_id,
-    )
-    await get_api_graphs(tid, r)
+    await get_api_graphs(r, graph_id)
     assert r.status_code == 404
 
     for _i, (graph, t) in enumerate([*graphs, *graphs[::-1]]):
         r = Response()
-        tid = TemporalID(id=graph_id, timestamp=t)
-        response = await get_api_graphs(tid, r)
+        response = await get_api_graphs_timestamp(r, t, graph_id)
         assert r.status_code == 200
         assert isinstance(response, PlainTextResponse)
         assert response.body.decode("utf-8") == dedent(graph.graph).strip()
 
-    tid = TemporalID(id=graph_id, timestamp=time.time())
-    response = await get_api_graphs(tid, r)
+    response = await get_api_graphs_timestamp(r, int(time.time()), graph_id)
     assert r.status_code == 404
     assert isinstance(response, Message)
     assert response == Message(message=f"No such graph: '{graph_id}'")
@@ -270,7 +251,7 @@ async def test_get_sparql() -> None:
     )
 
     r = Response()
-    assert await post_api_graphs(graph0, r) is None
+    assert await post_api_graphs(r, graph0) is None
     assert r.status_code == 200
 
     # Create v1 of graph B
@@ -285,7 +266,7 @@ async def test_get_sparql() -> None:
         """,
     )
     r = Response()
-    assert await post_api_graphs(graph1, r) is None
+    assert await post_api_graphs(r, graph1) is None
     assert r.status_code == 200
 
     # Time when graph B is in v1 (before B is updated)
@@ -304,7 +285,7 @@ async def test_get_sparql() -> None:
         """,
     )
     r = Response()
-    assert await post_api_graphs(graph2, r) is None
+    assert await post_api_graphs(r, graph2) is None
     assert r.status_code == 200
 
     # Time when graph B is in v2 (after B is updated)
@@ -313,17 +294,14 @@ async def test_get_sparql() -> None:
     time.sleep(2)
 
     # Delete graph B
-    id = ID(
-        id=graph_id,
-    )
     r = Response()
-    assert await delete_api_graphs(id, r) is None
+    assert await delete_api_graphs(r, graph_id) is None
     assert r.status_code == 200
 
     # Query without timestamp (after B is deleted) should yeld A
     q = f"""SELECT * WHERE {{<https://www.w3schools.com/{node_id}>?pred ?obj .}} LIMIT 10"""
     r = Response()
-    response = await get_api_sparql(q, r)
+    response = await get_api_sparql(r, q)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     content = literal_eval(response.body.decode("utf-8"))
@@ -356,7 +334,7 @@ async def test_get_sparql() -> None:
 
     # Query with timestamp t_v2 (after B is updated) should yield union of A and v2 of B
     r = Response()
-    response = await get_api_sparql_timestamp(q, t_v2, r)
+    response = await get_api_sparql_timestamp(r, t_v2, q)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     content = literal_eval(response.body.decode("utf-8"))
@@ -403,7 +381,7 @@ async def test_get_sparql() -> None:
 
     # Query with timestamp t_v1 (before B is updated) should yield union of A and v1 of B
     r = Response()
-    response = await get_api_sparql_timestamp(q, t_v1, r)
+    response = await get_api_sparql_timestamp(r, t_v1, q)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     content = literal_eval(response.body.decode("utf-8"))
@@ -452,15 +430,11 @@ async def test_get_sparql() -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_prehistoric_get_sparql() -> None:
-    """
-    Test sparql endpoint with timestamp earlier than first commit.
-    """
-
-    q = f"""SELECT * WHERE {{?s ?p ?o .}} LIMIT 10"""
+    """Test sparql endpoint with timestamp earlier than first commit."""
+    q = "SELECT * WHERE {?s ?p ?o .} LIMIT 10"
     r = Response()
-    response = await get_api_sparql_timestamp(q, 10, r)
-    print(response)
+    response = await get_api_sparql_timestamp(r, 10, q)
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     content = literal_eval(response.body.decode("utf-8"))
-    assert content['results']['bindings'] == []
+    assert content["results"]["bindings"] == []

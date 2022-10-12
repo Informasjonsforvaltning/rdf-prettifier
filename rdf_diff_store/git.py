@@ -18,6 +18,7 @@ REPO_PATH = os.getenv("REPO_PATH", "diff-store-autodeleted-repo")
 
 class PrehistoricError(Exception):
     """Error raised when requesting a timestamp preceding first diff in store."""
+
     pass
 
 
@@ -120,8 +121,8 @@ async def load_graph(id: str, timestamp: Optional[int]) -> str:
     async with lock():
         try:
             repo = get_repo(timestamp)
-        except PrehistoricError:
-            raise FileNotFoundError()
+        except PrehistoricError as e:
+            raise FileNotFoundError() from e
 
         path = graph_path(repo, graph_filename(id))
 

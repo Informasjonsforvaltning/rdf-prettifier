@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from typing import Optional, Union
+from typing import Union
 
 from fastapi import Depends, FastAPI, Response
 from fastapi.responses import PlainTextResponse
@@ -10,7 +10,7 @@ from fastapi.security.api_key import APIKey
 
 from .auth import get_api_key
 from .git import delete_graph, load_graph, repo_metadata, store_graph
-from .models import Graph, HTTPError, ID, Message, Metadata, TemporalID
+from .models import Graph, HTTPError, Message, Metadata
 from .rdf import to_turtle
 from .sparql import query_sparql
 
@@ -42,16 +42,37 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
     responses={"404": {"model": Message}, "500": {"model": HTTPError}},
 )
 async def get_api_graphs(
-    body: TemporalID, response: Response
+    response: Response, id: str
 ) -> Union[PlainTextResponse, Message, HTTPError]:
     """
-    Get graph at specific time
+    Get current graph.
     """
     try:
-        return PlainTextResponse(await load_graph(body.id, body.timestamp))
+        return PlainTextResponse(await load_graph(id, None))
     except FileNotFoundError:
         response.status_code = 404
-        return Message(message=f"No such graph: '{body.id}'")
+        return Message(message=f"No such graph: '{id}'")
+    except Exception as e:
+        response.status_code = 500
+        return HTTPError(error=str(e))
+
+
+@app.get(
+    "/api/graphs/{timestamp}",
+    response_model=Union[str, Message, HTTPError],
+    responses={"404": {"model": Message}, "500": {"model": HTTPError}},
+)
+async def get_api_graphs_timestamp(
+    response: Response, timestamp: int, id: str
+) -> Union[PlainTextResponse, Message, HTTPError]:
+    """
+    Get graph at specific time.
+    """
+    try:
+        return PlainTextResponse(await load_graph(id, timestamp))
+    except FileNotFoundError:
+        response.status_code = 404
+        return Message(message=f"No such graph: '{id}'")
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))
@@ -63,10 +84,10 @@ async def get_api_graphs(
     responses={"500": {"model": HTTPError}},
 )
 async def get_api_sparql(
-    query: str, response: Response
+    response: Response, query: str
 ) -> Union[PlainTextResponse, HTTPError]:
     """
-    Query current time with SparQL
+    Query current time with SparQL.
     """
     try:
         return PlainTextResponse(await query_sparql(query, None))
@@ -81,10 +102,10 @@ async def get_api_sparql(
     responses={"500": {"model": HTTPError}},
 )
 async def get_api_sparql_timestamp(
-    query: str, timestamp: Optional[int], response: Response
+    response: Response, timestamp: int, query: str
 ) -> Union[PlainTextResponse, HTTPError]:
     """
-    Query specific timestamp with SparQL
+    Query specific timestamp with SparQL.
     """
     try:
         return PlainTextResponse(await query_sparql(query, timestamp))
@@ -95,10 +116,10 @@ async def get_api_sparql_timestamp(
 
 @app.post("/api/graphs", response_model=None, responses={"500": {"model": HTTPError}})
 async def post_api_graphs(
-    body: Graph, response: Response, api_key: APIKey = Depends(get_api_key)
+    response: Response, body: Graph, api_key: APIKey = Depends(get_api_key)
 ) -> Union[None, HTTPError]:
     """
-    Store graph
+    Store graph.
     """
     try:
         turtle = to_turtle(body.graph, body.format)
@@ -115,17 +136,17 @@ async def post_api_graphs(
     responses={"404": {"model": Message}, "500": {"model": HTTPError}},
 )
 async def delete_api_graphs(
-    body: ID, response: Response, api_key: APIKey = Depends(get_api_key)
+    response: Response, id: str, api_key: APIKey = Depends(get_api_key)
 ) -> Union[None, Message, HTTPError]:
     """
-    Delete graph
+    Delete graph.
     """
     try:
-        await delete_graph(body.id)
+        await delete_graph(id)
         return None
     except FileNotFoundError:
         response.status_code = 404
-        return Message(message=f"No such graph: '{body.id}'")
+        return Message(message=f"No such graph: '{id}'")
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))

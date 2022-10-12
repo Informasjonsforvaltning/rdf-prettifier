@@ -16,6 +16,11 @@ from rdf_diff_store.models import Metadata
 REPO_PATH = os.getenv("REPO_PATH", "diff-store-autodeleted-repo")
 
 
+class PrehistoricError(Exception):
+    """Error raised when requesting a timestamp preceding first diff in store."""
+    pass
+
+
 def acquire_lock() -> Any:
     """Lock for git repo usage."""
     f = open("rdf-diff-store-repo.lock", "w")
@@ -71,7 +76,10 @@ def checkout_timestamp(repo: Repo, timestamp: int) -> None:
     if not isinstance(timestamp, int):
         raise ValueError("timestamp not an integer")
     ref = repo.git.rev_list("--max-count", "1", "--before", f"{timestamp}", "HEAD")
-    repo.git.checkout(ref)
+    if ref:
+        repo.git.checkout(ref)
+    else:
+        raise PrehistoricError()
 
 
 def graph_filename(id: str) -> str:
@@ -110,7 +118,11 @@ async def delete_graph(id: str) -> None:
 async def load_graph(id: str, timestamp: Optional[int]) -> str:
     """Load graph."""
     async with lock():
-        repo = get_repo(timestamp)
+        try:
+            repo = get_repo(timestamp)
+        except PrehistoricError:
+            raise FileNotFoundError()
+
         path = graph_path(repo, graph_filename(id))
 
         with open(path, "r") as f:
@@ -118,9 +130,14 @@ async def load_graph(id: str, timestamp: Optional[int]) -> str:
 
 
 async def load_all_graphs(timestamp: Optional[int]) -> AsyncGenerator[str, None]:
-    """Load all graph."""
+    """Load all graphs."""
     async with lock():
-        repo = get_repo(timestamp)
+        try:
+            repo = get_repo(timestamp)
+        except PrehistoricError:
+            # return + yield results in empty generator
+            return
+            yield
 
         for filename in os.listdir(graphs_dir(repo)):
             try:

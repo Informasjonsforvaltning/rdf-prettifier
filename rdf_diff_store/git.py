@@ -170,7 +170,7 @@ async def repo_metadata() -> Metadata:
             *_, first = repo.iter_commits()
             return Metadata(
                 empty=False,
-                start_time=first.committed_date,
+                start_time=first.authored_date,
             )
         # no commits in repo
         except ValueError:

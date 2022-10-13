@@ -49,7 +49,7 @@ async def test_metadata() -> None:
         graph="""
         @prefix si: <https://www.w3schools.com/rdf/> .
 
-        <https://www.w3schools.com> si:author "Jan Egil Refsnes" ;
+        <https://www.w3schools00.com> si:author "Jan Egil Refsnes" ;
             si:title "W3Schools" .
         """,
     )
@@ -89,7 +89,7 @@ async def test_store_turtle() -> None:
         graph="""
         @prefix si: <https://www.w3schools.com/rdf/> .
 
-        <https://www.w3schools.com> si:author "Jan Egil Refsnes" ;
+        <https://www.w3schools01.com> si:author "Jan Egil Refsnes" ;
             si:title "W3Schools" .
         """,
     )
@@ -108,7 +108,7 @@ async def test_update() -> None:
         graph="""
         @prefix si: <https://www.w3schools.com/rdf/> .
 
-        <https://www.w3schools.com> si:author "Jan Egil Refsnes" ;
+        <https://www.w3schools02.com> si:author "Jan Egil Refsnes" ;
             si:title "W3Schools" .
         """,
     )
@@ -121,7 +121,7 @@ async def test_update() -> None:
         graph="""
         @prefix si: <https://www.w3schools.com/rdf/> .
 
-        <https://www.w3schools.com> si:author "John Doe" ;
+        <https://www.w3schools02.com> si:author "John Doe" ;
             si:title "W3Schools" .
         """,
     )
@@ -134,6 +134,33 @@ async def test_update() -> None:
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
     assert response.body.decode("utf-8") == dedent(update.graph).strip()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_graphs() -> None:
+    """Get all graphs."""
+    r = Response()
+    response = await get_api_graphs(r, None)
+
+    expected = """
+        @prefix si: <https://www.w3schools.com/rdf/> .
+
+        <https://www.w3schools00.com> si:author "Jan Egil Refsnes" ;
+            si:title "W3Schools" .
+
+        <https://www.w3schools01.com> si:author "Jan Egil Refsnes" ;
+            si:title "W3Schools" .
+
+        <https://www.w3schools02.com> si:author "John Doe" ;
+            si:title "W3Schools" .
+    """
+
+    assert r.status_code == 200
+    assert isinstance(response, PlainTextResponse)
+    print(response.body.decode("utf-8"))
+    print(dedent(expected).strip())
+    assert response.body.decode("utf-8") == dedent(expected).strip()
 
 
 @pytest.mark.integration

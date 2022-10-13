@@ -2,16 +2,21 @@ from __future__ import annotations
 
 import logging
 
-from typing import Union
+from typing import Optional, Union
 
 from fastapi import Depends, FastAPI, Response
 from fastapi.responses import PlainTextResponse
 from fastapi.security.api_key import APIKey
 
 from .auth import get_api_key
-from .git import delete_graph, load_graph, repo_metadata, store_graph
+from .git import (
+    delete_graph,
+    load_graph,
+    repo_metadata,
+    store_graph,
+)
 from .models import Graph, HTTPError, Message, Metadata
-from .rdf import to_turtle
+from .rdf import load_all_graphs, to_turtle
 from .sparql import query_sparql
 
 app = FastAPI(
@@ -42,16 +47,21 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
     responses={"404": {"model": Message}, "500": {"model": HTTPError}},
 )
 async def get_api_graphs(
-    response: Response, id: str
+    response: Response,
+    id: Optional[str] = None,
 ) -> Union[PlainTextResponse, Message, HTTPError]:
     """
-    Get current graph.
+    Get current graph(s).
     """
     try:
-        return PlainTextResponse(await load_graph(id, None))
-    except FileNotFoundError:
-        response.status_code = 404
-        return Message(message=f"No such graph: '{id}'")
+        if id:
+            try:
+                return PlainTextResponse(await load_graph(id, None))
+            except FileNotFoundError:
+                response.status_code = 404
+                return Message(message=f"No such graph: '{id}'")
+        else:
+            return PlainTextResponse(await load_all_graphs(None))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))
@@ -63,16 +73,22 @@ async def get_api_graphs(
     responses={"404": {"model": Message}, "500": {"model": HTTPError}},
 )
 async def get_api_graphs_timestamp(
-    response: Response, timestamp: int, id: str
+    response: Response,
+    timestamp: int,
+    id: Optional[str] = None,
 ) -> Union[PlainTextResponse, Message, HTTPError]:
     """
-    Get graph at specific time.
+    Get graph(s) at specific time.
     """
     try:
-        return PlainTextResponse(await load_graph(id, timestamp))
-    except FileNotFoundError:
-        response.status_code = 404
-        return Message(message=f"No such graph: '{id}'")
+        if id:
+            try:
+                return PlainTextResponse(await load_graph(id, timestamp))
+            except FileNotFoundError:
+                response.status_code = 404
+                return Message(message=f"No such graph: '{id}'")
+        else:
+            return PlainTextResponse(await load_all_graphs(timestamp))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))

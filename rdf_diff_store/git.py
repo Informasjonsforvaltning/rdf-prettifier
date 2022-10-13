@@ -130,8 +130,8 @@ async def load_graph(id: str, timestamp: Optional[int]) -> str:
             return f.read()
 
 
-async def load_all_graphs(timestamp: Optional[int]) -> AsyncGenerator[str, None]:
-    """Load all graphs."""
+async def iterate_all_graphs(timestamp: Optional[int]) -> AsyncGenerator[str, None]:
+    """Iterate all graphs."""
     async with lock():
         try:
             repo = get_repo(timestamp)

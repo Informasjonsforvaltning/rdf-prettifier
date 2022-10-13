@@ -88,6 +88,19 @@ def test_load_graph(service: str) -> None:
 
 
 @pytest.mark.contract
+def test_load_all_graphs(service: str) -> None:
+    """Test all graphs retrieval."""
+    expected = """
+        @prefix si: <https://www.w3schools.com/rdf/> .
+
+        <https://digdir.no/dataset/007> si:author "James Bond" ;
+            si:title "The man!" .
+        """
+    response = requests.get(f"{service}/api/graphs")
+    assert response.content.decode("utf-8") == dedent(expected).strip()
+
+
+@pytest.mark.contract
 def test_sparql_query(service: str) -> None:
     """Test sparql query."""
     q = (

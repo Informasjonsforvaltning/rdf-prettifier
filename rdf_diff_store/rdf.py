@@ -18,7 +18,7 @@ async def parse_all_graphs(timestamp: Optional[int]) -> Graph:
     """Parse all graphs."""
     g = Graph()
     async for graph in iterate_all_graphs(timestamp):
-        g.parse(data=graph)
+        g.parse(data=graph, format="text/turtle")
     return g
 
 

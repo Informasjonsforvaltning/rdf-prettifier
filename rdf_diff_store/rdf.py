@@ -21,6 +21,13 @@ async def parse_all_graphs(timestamp: Optional[int]) -> Graph:
         g.parse(data=graph, format="text/turtle")
     return g
 
+async def load_all_graphs_raw(timestamp: Optional[int]) -> str:
+    """Load all graphs raw."""
+    combined = ""
+    async for graph in iterate_all_graphs(timestamp):
+        combined += graph + "\n# ---\n"
+    return combined
+
 
 async def load_all_graphs(timestamp: Optional[int]) -> str:
     """Load all graphs."""

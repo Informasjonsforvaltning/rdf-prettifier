@@ -16,7 +16,7 @@ from .git import (
     store_graph,
 )
 from .models import Graph, HTTPError, Message, Metadata
-from .rdf import load_all_graphs, to_turtle
+from .rdf import load_all_graphs, load_all_graphs_raw, to_turtle
 from .sparql import query_sparql
 
 app = FastAPI(
@@ -49,6 +49,7 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 async def get_api_graphs(
     response: Response,
     id: Optional[str] = None,
+    raw: Optional[str] = None,
 ) -> Union[PlainTextResponse, Message, HTTPError]:
     """
     Get current graph(s).
@@ -61,7 +62,10 @@ async def get_api_graphs(
                 response.status_code = 404
                 return Message(message=f"No such graph: '{id}'")
         else:
-            return PlainTextResponse(await load_all_graphs(None))
+            if isinstance(raw, str) and raw == "true":
+                return PlainTextResponse(await load_all_graphs_raw(None))
+            else:
+                return PlainTextResponse(await load_all_graphs(None))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))
@@ -76,6 +80,7 @@ async def get_api_graphs_timestamp(
     response: Response,
     timestamp: int,
     id: Optional[str] = None,
+    raw: Optional[str] = None,
 ) -> Union[PlainTextResponse, Message, HTTPError]:
     """Get graph(s) at specific time."""
     try:
@@ -86,7 +91,10 @@ async def get_api_graphs_timestamp(
                 response.status_code = 404
                 return Message(message=f"No such graph: '{id}'")
         else:
-            return PlainTextResponse(await load_all_graphs(timestamp))
+            if isinstance(raw, str) and raw == "true":
+                return PlainTextResponse(await load_all_graphs_raw(timestamp))
+            else:
+                return PlainTextResponse(await load_all_graphs(timestamp))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))

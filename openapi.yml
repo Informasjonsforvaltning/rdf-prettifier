@@ -139,6 +139,12 @@ paths:
         schema:
           title: Id
           type: string
+      - in: query
+        name: raw
+        required: false
+        schema:
+          title: Raw
+          type: string
       responses:
         '200':
           content:
@@ -215,6 +221,12 @@ paths:
         required: false
         schema:
           title: Id
+          type: string
+      - in: query
+        name: raw
+        required: false
+        schema:
+          title: Raw
           type: string
       responses:
         '200':

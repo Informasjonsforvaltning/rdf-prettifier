@@ -1,6 +1,5 @@
 """RDF."""
 
-from math import comb
 from typing import Optional, Union
 
 from rdf_diff_store.git import iterate_all_graphs
@@ -22,12 +21,13 @@ async def parse_all_graphs(timestamp: Optional[int]) -> Graph:
         g.parse(data=graph, format="text/turtle")
     return g
 
+
 async def load_all_graphs_raw(timestamp: Optional[int]) -> str:
     """Load all graphs raw."""
     combined = ""
     async for graph in iterate_all_graphs(timestamp):
         combined += graph + "\n# ---\n"
-    
+
     if len(combined) > 0:
         return combined[:-7:]
     else:

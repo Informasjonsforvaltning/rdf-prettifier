@@ -1,11 +1,12 @@
-from __future__ import annotations
+import asyncio
 
 import logging
+import time
 
 from typing import Optional, Union
 
-from fastapi import Depends, FastAPI, Response
-from fastapi.responses import PlainTextResponse
+from fastapi import Depends, FastAPI, Request, Response
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.security.api_key import APIKey
 
 from .auth import get_api_key
@@ -39,6 +40,20 @@ class EndpointFilter(logging.Filter):
 
 
 logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
+
+
+@app.middleware("http")
+async def timeout_middleware(request: Request, call_next):
+    """Timeout middleware."""
+    try:
+        start_time = time.time()
+        return await asyncio.wait_for(call_next(request), timeout=5)
+
+    except asyncio.TimeoutError:
+        process_time = time.time() - start_time
+        return JSONResponse({"error":
+            f"Request processing time excedeed limit: {process_time}",
+        }, status_code=500)
 
 
 @app.get(

@@ -158,8 +158,6 @@ async def test_get_all_graphs() -> None:
 
     assert r.status_code == 200
     assert isinstance(response, PlainTextResponse)
-    print(response.body.decode("utf-8"))
-    print(dedent(expected).strip())
     assert response.body.decode("utf-8") == dedent(expected).strip()
 
 

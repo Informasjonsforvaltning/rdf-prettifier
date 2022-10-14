@@ -77,9 +77,7 @@ async def get_api_graphs_timestamp(
     timestamp: int,
     id: Optional[str] = None,
 ) -> Union[PlainTextResponse, Message, HTTPError]:
-    """
-    Get graph(s) at specific time.
-    """
+    """Get graph(s) at specific time."""
     try:
         if id:
             try:
@@ -102,9 +100,7 @@ async def get_api_graphs_timestamp(
 async def get_api_sparql(
     response: Response, query: str
 ) -> Union[PlainTextResponse, HTTPError]:
-    """
-    Query current time with SparQL.
-    """
+    """Query current graphs with SparQL."""
     try:
         return PlainTextResponse(await query_sparql(query, None))
     except Exception as e:
@@ -120,9 +116,7 @@ async def get_api_sparql(
 async def get_api_sparql_timestamp(
     response: Response, timestamp: int, query: str
 ) -> Union[PlainTextResponse, HTTPError]:
-    """
-    Query specific timestamp with SparQL.
-    """
+    """Query specific timestamp with SparQL."""
     try:
         return PlainTextResponse(await query_sparql(query, timestamp))
     except Exception as e:
@@ -134,9 +128,7 @@ async def get_api_sparql_timestamp(
 async def post_api_graphs(
     response: Response, body: Graph, api_key: APIKey = Depends(get_api_key)
 ) -> Union[None, HTTPError]:
-    """
-    Store graph.
-    """
+    """Store graph."""
     try:
         turtle = to_turtle(body.graph, body.format)
         await store_graph(body.id, turtle)
@@ -154,9 +146,7 @@ async def post_api_graphs(
 async def delete_api_graphs(
     response: Response, id: str, api_key: APIKey = Depends(get_api_key)
 ) -> Union[None, Message, HTTPError]:
-    """
-    Delete graph.
-    """
+    """Delete graph."""
     try:
         await delete_graph(id)
         return None
@@ -174,9 +164,7 @@ async def delete_api_graphs(
     responses={"500": {"model": HTTPError}},
 )
 async def get_api_metadata(response: Response) -> Union[Metadata, HTTPError]:
-    """
-    Get diff-store metadata.
-    """
+    """Get diff-store metadata."""
     try:
         return await repo_metadata()
     except Exception as e:

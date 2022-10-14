@@ -269,7 +269,7 @@ paths:
       summary: Get Api Metadata
   /api/sparql:
     get:
-      description: Query current time with SparQL.
+      description: Query current graphs with SparQL.
       operationId: get_api_sparql_api_sparql_get
       parameters:
       - in: query

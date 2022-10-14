@@ -7,6 +7,7 @@ import fcntl
 import os
 from typing import Any, AsyncGenerator, Optional
 
+import aiofiles
 from git import Repo
 from git.exc import GitCommandError, NoSuchPathError
 
@@ -130,6 +131,12 @@ async def load_graph(id: str, timestamp: Optional[int]) -> str:
             return f.read()
 
 
+async def read_file(fname: str) -> str:
+    """Read a file async."""
+    async with aiofiles.open(fname, mode="r") as f:
+        return await f.read()
+
+
 async def iterate_all_graphs(timestamp: Optional[int]) -> AsyncGenerator[str, None]:
     """Iterate all graphs."""
     async with lock():
@@ -140,12 +147,15 @@ async def iterate_all_graphs(timestamp: Optional[int]) -> AsyncGenerator[str, No
             return
             yield
 
-        for filename in os.listdir(graphs_dir(repo)):
-            try:
-                with open(graph_path(repo, filename), "r") as f:
-                    yield f.read()
-            except IsADirectoryError:
-                pass
+        fnames = os.listdir(graphs_dir(repo))
+        awaitables = [
+            read_file(graph_path(repo, fname))
+            for fname in fnames
+            if os.path.isfile(graph_path(repo, fname))
+        ]
+
+        for graph in asyncio.as_completed(awaitables):
+            yield await graph
 
 
 async def store_graph(id: str, graph: str) -> None:

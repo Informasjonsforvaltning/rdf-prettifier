@@ -14,10 +14,15 @@ def to_turtle(graph: str, format: Union[None, str]) -> str:
     return g.serialize(format="text/turtle").strip()
 
 
-async def load_all_graphs(timestamp: Optional[int]) -> str:
-    """Load all graphs."""
+async def parse_all_graphs(timestamp: Optional[int]) -> Graph:
+    """Parse all graphs."""
     g = Graph()
     async for graph in iterate_all_graphs(timestamp):
         g.parse(data=graph)
+    return g
 
+
+async def load_all_graphs(timestamp: Optional[int]) -> str:
+    """Load all graphs."""
+    g = await parse_all_graphs(timestamp)
     return g.serialize(format="text/turtle").strip()

@@ -14,10 +14,27 @@ def to_turtle(graph: str, format: Union[None, str]) -> str:
     return g.serialize(format="text/turtle").strip()
 
 
-async def load_all_graphs(timestamp: Optional[int]) -> str:
-    """Load all graphs."""
+async def parse_all_graphs(timestamp: Optional[int]) -> Graph:
+    """Parse all graphs."""
     g = Graph()
     async for graph in iterate_all_graphs(timestamp):
-        g.parse(data=graph)
+        g.parse(data=graph, format="text/turtle")
+    return g
 
+
+async def load_all_graphs_raw(timestamp: Optional[int]) -> str:
+    """Load all graphs raw."""
+    combined = ""
+    async for graph in iterate_all_graphs(timestamp):
+        combined += graph + "\n# ---\n"
+
+    if len(combined) > 0:
+        return combined[:-7:]
+    else:
+        return ""
+
+
+async def load_all_graphs(timestamp: Optional[int]) -> str:
+    """Load all graphs."""
+    g = await parse_all_graphs(timestamp)
     return g.serialize(format="text/turtle").strip()

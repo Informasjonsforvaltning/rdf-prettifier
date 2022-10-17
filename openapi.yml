@@ -139,6 +139,12 @@ paths:
         schema:
           title: Id
           type: string
+      - in: query
+        name: raw
+        required: false
+        schema:
+          title: Raw
+          type: string
       responses:
         '200':
           content:
@@ -216,6 +222,12 @@ paths:
         schema:
           title: Id
           type: string
+      - in: query
+        name: raw
+        required: false
+        schema:
+          title: Raw
+          type: string
       responses:
         '200':
           content:
@@ -269,7 +281,7 @@ paths:
       summary: Get Api Metadata
   /api/sparql:
     get:
-      description: Query current time with SparQL.
+      description: Query current graphs with SparQL.
       operationId: get_api_sparql_api_sparql_get
       parameters:
       - in: query

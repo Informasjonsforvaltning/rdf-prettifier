@@ -1,11 +1,12 @@
-from __future__ import annotations
+import asyncio
 
 import logging
+import time
 
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
-from fastapi import Depends, FastAPI, Response
-from fastapi.responses import PlainTextResponse
+from fastapi import Depends, FastAPI, Request, Response
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.security.api_key import APIKey
 
 from .auth import get_api_key
@@ -16,7 +17,7 @@ from .git import (
     store_graph,
 )
 from .models import Graph, HTTPError, Message, Metadata
-from .rdf import load_all_graphs, to_turtle
+from .rdf import load_all_graphs, load_all_graphs_raw, to_turtle
 from .sparql import query_sparql
 
 app = FastAPI(
@@ -41,6 +42,23 @@ class EndpointFilter(logging.Filter):
 logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 
+@app.middleware("http")
+async def timeout_middleware(request: Request, call_next: Any) -> Any:
+    """Timeout middleware."""
+    try:
+        start_time = time.time()
+        return await asyncio.wait_for(call_next(request), timeout=10)
+
+    except asyncio.TimeoutError:
+        process_time = time.time() - start_time
+        return JSONResponse(
+            {
+                "error": f"Request processing time excedeed limit: {process_time}",
+            },
+            status_code=500,
+        )
+
+
 @app.get(
     "/api/graphs",
     response_model=Union[str, Message, HTTPError],
@@ -49,6 +67,7 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 async def get_api_graphs(
     response: Response,
     id: Optional[str] = None,
+    raw: Optional[str] = None,
 ) -> Union[PlainTextResponse, Message, HTTPError]:
     """
     Get current graph(s).
@@ -61,7 +80,10 @@ async def get_api_graphs(
                 response.status_code = 404
                 return Message(message=f"No such graph: '{id}'")
         else:
-            return PlainTextResponse(await load_all_graphs(None))
+            if isinstance(raw, str) and raw == "true":
+                return PlainTextResponse(await load_all_graphs_raw(None))
+            else:
+                return PlainTextResponse(await load_all_graphs(None))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))
@@ -76,10 +98,9 @@ async def get_api_graphs_timestamp(
     response: Response,
     timestamp: int,
     id: Optional[str] = None,
+    raw: Optional[str] = None,
 ) -> Union[PlainTextResponse, Message, HTTPError]:
-    """
-    Get graph(s) at specific time.
-    """
+    """Get graph(s) at specific time."""
     try:
         if id:
             try:
@@ -88,7 +109,10 @@ async def get_api_graphs_timestamp(
                 response.status_code = 404
                 return Message(message=f"No such graph: '{id}'")
         else:
-            return PlainTextResponse(await load_all_graphs(timestamp))
+            if isinstance(raw, str) and raw == "true":
+                return PlainTextResponse(await load_all_graphs_raw(timestamp))
+            else:
+                return PlainTextResponse(await load_all_graphs(timestamp))
     except Exception as e:
         response.status_code = 500
         return HTTPError(error=str(e))
@@ -102,9 +126,7 @@ async def get_api_graphs_timestamp(
 async def get_api_sparql(
     response: Response, query: str
 ) -> Union[PlainTextResponse, HTTPError]:
-    """
-    Query current time with SparQL.
-    """
+    """Query current graphs with SparQL."""
     try:
         return PlainTextResponse(await query_sparql(query, None))
     except Exception as e:
@@ -120,9 +142,7 @@ async def get_api_sparql(
 async def get_api_sparql_timestamp(
     response: Response, timestamp: int, query: str
 ) -> Union[PlainTextResponse, HTTPError]:
-    """
-    Query specific timestamp with SparQL.
-    """
+    """Query specific timestamp with SparQL."""
     try:
         return PlainTextResponse(await query_sparql(query, timestamp))
     except Exception as e:
@@ -134,9 +154,7 @@ async def get_api_sparql_timestamp(
 async def post_api_graphs(
     response: Response, body: Graph, api_key: APIKey = Depends(get_api_key)
 ) -> Union[None, HTTPError]:
-    """
-    Store graph.
-    """
+    """Store graph."""
     try:
         turtle = to_turtle(body.graph, body.format)
         await store_graph(body.id, turtle)
@@ -154,9 +172,7 @@ async def post_api_graphs(
 async def delete_api_graphs(
     response: Response, id: str, api_key: APIKey = Depends(get_api_key)
 ) -> Union[None, Message, HTTPError]:
-    """
-    Delete graph.
-    """
+    """Delete graph."""
     try:
         await delete_graph(id)
         return None
@@ -174,9 +190,7 @@ async def delete_api_graphs(
     responses={"500": {"model": HTTPError}},
 )
 async def get_api_metadata(response: Response) -> Union[Metadata, HTTPError]:
-    """
-    Get diff-store metadata.
-    """
+    """Get diff-store metadata."""
     try:
         return await repo_metadata()
     except Exception as e:

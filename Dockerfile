@@ -14,10 +14,9 @@ WORKDIR /tmp
 COPY --from=requirements /tmp/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY ./rdf_diff_store /rdf_diff_store
-ENV REPO_PATH=/repo/diff-store
+COPY ./rdf_prettifier /rdf_prettifier
 
 WORKDIR /
 
 EXPOSE 80
-CMD ["uvicorn", "rdf_diff_store.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "rdf_prettifier.main:app", "--host", "0.0.0.0", "--port", "80"]

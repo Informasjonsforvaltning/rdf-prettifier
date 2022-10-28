@@ -1,7 +1,7 @@
 """Generate openapi doc."""
 
 from fastapi.openapi.utils import get_openapi
-from rdf_diff_store.main import app
+from rdf_prettifier.main import app
 import yaml
 
 spec = get_openapi(

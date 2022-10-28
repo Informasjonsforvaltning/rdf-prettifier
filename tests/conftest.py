@@ -17,7 +17,7 @@ def docker_compose_file(pytestconfig: Any) -> str:
 @pytest.fixture(scope="session")
 def service(docker_ip: str, docker_services: Any) -> str:
     """Ensure that service is up and responsive."""
-    port = docker_services.port_for("rdf-diff-store", 80)
+    port = docker_services.port_for("rdf-prettifier", 80)
     url = f"http://{docker_ip}:{port}"
     docker_services.wait_until_responsive(
         timeout=30, pause=0.1, check=lambda: is_ok(f"{url}/readyz", 200)

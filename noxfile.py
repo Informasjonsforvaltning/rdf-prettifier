@@ -5,7 +5,7 @@ import sys
 import nox
 from nox_poetry import Session, session
 
-python_versions = ["3.9", "3.10"]
+python_versions = ["3.10"]
 nox.options.envdir = ".cache"
 # To run consecutive nox sessions faster.
 nox.options.reuse_existing_virtualenvs = False
@@ -73,7 +73,7 @@ def lint(session: Session) -> None:
 @session(python=python_versions)
 def mypy(session: Session) -> None:
     """Type-check using mypy."""
-    args = session.posargs or ["rdf_diff_store", "tests"]
+    args = session.posargs or ["rdf_prettifier", "tests"]
     session.install(".")
     session.install("mypy", "pytest", "types-requests")
     session.run("mypy", *args)

@@ -4,7 +4,7 @@ from textwrap import dedent
 
 import pytest
 
-from rdf_diff_store.rdf import to_turtle
+from rdf_prettifier.rdf import prettify
 
 
 @pytest.mark.unit
@@ -31,4 +31,9 @@ def test_parse_xml() -> None:
             si:title "W3Schools" .
         """
 
-    assert to_turtle(graph=xml, format="application/rdf+xml") == dedent(turtle).strip()
+    assert (
+        prettify(
+            graph=xml, input_format="application/rdf+xml", output_format="text/turtle"
+        )
+        == dedent(turtle).strip()
+    )

@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "rdf-diff-store"
+name = "rdf-prettifier"
 version = "0.1.0"
-description = "Historical storage for rdf"
+description = "Prettifies RDF graphs"
 authors = ["Digdir <fellesdatakatalog@digdir.no>"]
-homepage = "https://github.com/Informasjonsforvaltning/rdf-diff-store"
+homepage = "https://github.com/Informasjonsforvaltning/rdf-prettifier"
 readme = "README.md"
 license = "Apache-2.0"
 
@@ -54,7 +54,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.run]
-source = ["rdf_diff_store"]
+source = ["rdf_prettifier"]
 
 [tool.coverage.report]
 fail_under = 100

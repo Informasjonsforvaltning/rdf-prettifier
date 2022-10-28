@@ -11,7 +11,7 @@ jobs:
     name: Deploy to prod on merge to main branch
     uses: Informasjonsforvaltning/workflows/.github/workflows/build-deploy-helm-nox.yaml@main
     with:
-      app_name: fdk-rdf-diff-store
+      app_name: rdf-prettifier
       python_version: "3.10"
       python_architecture: x64
       environment: prod
@@ -28,7 +28,7 @@ jobs:
     name: Deploy to demo if prod-deploy is successful
     uses: Informasjonsforvaltning/workflows/.github/workflows/deploy-helm.yaml@main
     with:
-      app_name: fdk-rdf-diff-store
+      app_name: rdf-prettifier
       environment: demo
       cluster: digdir-fdk-dev
     secrets:

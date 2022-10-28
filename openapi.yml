@@ -1,22 +1,24 @@
 components:
   schemas:
     Graph:
+      description: Graph Class.
       properties:
-        format:
-          title: Format
-          type: string
         graph:
           title: Graph
           type: string
-        id:
-          title: Id
+        input_format:
+          title: Input Format
+          type: string
+        output_format:
+          default: turtle
+          title: Output Format
           type: string
       required:
-      - id
       - graph
       title: Graph
       type: object
     HTTPError:
+      description: HTTPError.
       properties:
         error:
           title: Error
@@ -34,26 +36,6 @@ components:
           title: Detail
           type: array
       title: HTTPValidationError
-      type: object
-    Message:
-      properties:
-        message:
-          title: Message
-          type: string
-      title: Message
-      type: object
-    Metadata:
-      properties:
-        empty:
-          title: Empty
-          type: boolean
-        start_time:
-          description: Seconds since epoch
-          title: Start Time
-          type: integer
-      required:
-      - empty
-      title: Metadata
       type: object
     ValidationError:
       properties:
@@ -82,102 +64,15 @@ components:
       name: X-API-KEY
       type: apiKey
 info:
-  description: Historical storage for rdf
-  title: rdf-diff-store
+  description: Prettifies an RDF graph
+  title: rdf-prettifier
   version: 0.1.0
 openapi: 3.0.2
 paths:
-  /api/graphs:
-    delete:
-      description: Delete graph.
-      operationId: delete_api_graphs_api_graphs_delete
-      parameters:
-      - in: query
-        name: id
-        required: true
-        schema:
-          title: Id
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                anyOf:
-                - $ref: '#/components/schemas/Message'
-                - $ref: '#/components/schemas/HTTPError'
-                title: Response Delete Api Graphs Api Graphs Delete
-          description: Successful Response
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-          description: Not Found
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-          description: Validation Error
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-          description: Internal Server Error
-      security:
-      - APIKeyHeader: []
-      summary: Delete Api Graphs
-    get:
-      description: Get current graph(s).
-      operationId: get_api_graphs_api_graphs_get
-      parameters:
-      - in: query
-        name: id
-        required: false
-        schema:
-          title: Id
-          type: string
-      - in: query
-        name: raw
-        required: false
-        schema:
-          title: Raw
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                anyOf:
-                - type: string
-                - $ref: '#/components/schemas/Message'
-                - $ref: '#/components/schemas/HTTPError'
-                title: Response Get Api Graphs Api Graphs Get
-          description: Successful Response
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-          description: Not Found
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-          description: Validation Error
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-          description: Internal Server Error
-      summary: Get Api Graphs
+  /api/prettify:
     post:
-      description: Store graph.
-      operationId: post_api_graphs_api_graphs_post
+      description: Return pretty printed graph.
+      operationId: prettify_graph_api_prettify_post
       requestBody:
         content:
           application/json:
@@ -204,155 +99,7 @@ paths:
           description: Internal Server Error
       security:
       - APIKeyHeader: []
-      summary: Post Api Graphs
-  /api/graphs/{timestamp}:
-    get:
-      description: Get graph(s) at specific time.
-      operationId: get_api_graphs_timestamp_api_graphs__timestamp__get
-      parameters:
-      - in: path
-        name: timestamp
-        required: true
-        schema:
-          title: Timestamp
-          type: integer
-      - in: query
-        name: id
-        required: false
-        schema:
-          title: Id
-          type: string
-      - in: query
-        name: raw
-        required: false
-        schema:
-          title: Raw
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                anyOf:
-                - type: string
-                - $ref: '#/components/schemas/Message'
-                - $ref: '#/components/schemas/HTTPError'
-                title: Response Get Api Graphs Timestamp Api Graphs  Timestamp  Get
-          description: Successful Response
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Message'
-          description: Not Found
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-          description: Validation Error
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-          description: Internal Server Error
-      summary: Get Api Graphs Timestamp
-  /api/metadata:
-    get:
-      description: Get diff-store metadata.
-      operationId: get_api_metadata_api_metadata_get
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                anyOf:
-                - $ref: '#/components/schemas/Metadata'
-                - $ref: '#/components/schemas/HTTPError'
-                title: Response Get Api Metadata Api Metadata Get
-          description: Successful Response
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-          description: Internal Server Error
-      summary: Get Api Metadata
-  /api/sparql:
-    get:
-      description: Query current graphs with SparQL.
-      operationId: get_api_sparql_api_sparql_get
-      parameters:
-      - in: query
-        name: query
-        required: true
-        schema:
-          title: Query
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                anyOf:
-                - type: string
-                - $ref: '#/components/schemas/HTTPError'
-                title: Response Get Api Sparql Api Sparql Get
-          description: Successful Response
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-          description: Validation Error
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-          description: Internal Server Error
-      summary: Get Api Sparql
-  /api/sparql/{timestamp}:
-    get:
-      description: Query specific timestamp with SparQL.
-      operationId: get_api_sparql_timestamp_api_sparql__timestamp__get
-      parameters:
-      - in: path
-        name: timestamp
-        required: true
-        schema:
-          title: Timestamp
-          type: integer
-      - in: query
-        name: query
-        required: true
-        schema:
-          title: Query
-          type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                anyOf:
-                - type: string
-                - $ref: '#/components/schemas/HTTPError'
-                title: Response Get Api Sparql Timestamp Api Sparql  Timestamp  Get
-          description: Successful Response
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-          description: Validation Error
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPError'
-          description: Internal Server Error
-      summary: Get Api Sparql Timestamp
+      summary: Prettify Graph
   /livez:
     get:
       description: Endpoint for liveness probe.

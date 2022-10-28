@@ -1,6 +1,7 @@
-# rdf-diff-store
+# rdf-prettifier
 
-API for versioning RDF and retrieving RDF graphs at any point in time
+API returning prettified version of RDF.
+(Supported input and output formats)[https://rdflib.readthedocs.io/en/stable/plugin_serializers.html].
 
 ## Development
 
@@ -13,7 +14,7 @@ poetry install
 Run locally:
 
 ```bash
-poetry run uvicorn rdf_diff_store.main:app --reload
+poetry run uvicorn rdf_prettifier.main:app --reload
 ```
 
 Generate code (after updating openapi spec):

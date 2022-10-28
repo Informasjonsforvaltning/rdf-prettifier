@@ -1,10 +1,5 @@
 """Contract tests."""
-
-from ast import literal_eval
-from math import ceil
 from textwrap import dedent
-import time
-from urllib.parse import quote
 
 import pytest
 
@@ -26,10 +21,11 @@ def test_livez(service: str) -> None:
 
 
 @pytest.mark.contract
-def test_store_graph_forbidden_when_missing_api_key(service: str) -> None:
-    """Test graph storage forbidden."""
+def test_request_forbidden_when_missing_api_key(service: str) -> None:
+    """Test forbidden request when missing api key."""
     data = {
-        "id": "<http://foo/bar¡@½@$}135[¥}¡35>",
+        "input_format": "text/turtle",
+        "output_format": "text/turtle",
         "graph": """
         @prefix si: <https://www.w3schools.com/rdf/> .
 
@@ -37,174 +33,93 @@ def test_store_graph_forbidden_when_missing_api_key(service: str) -> None:
             si:title "The man!" .
         """,
     }
-    response = requests.post(f"{service}/api/graphs", json=data)
+    response = requests.post(f"{service}/api/prettify", json=data)
     assert response.status_code == 403
 
 
 @pytest.mark.contract
-def test_store_graph(service: str) -> None:
-    """Test graph storage."""
+def test_successful_response_valid_turtle(service: str) -> None:
+    """Test successful response with valid turtle."""
     data = {
-        "id": "<http://foo/bar¡@½@$}135[¥}¡35>",
+        "input_format": "text/turtle",
+        "output_format": "text/turtle",
         "graph": """
         @prefix si: <https://www.w3schools.com/rdf/> .
 
-        <https://digdir.no/dataset/007> si:author "James Bond" ;
-            si:title "The man!" .
-        """,
+        <https://www.w3schools00.com> si:author "Jan Egil Refsnes" ;
+            si:title "W3Schools" ;
+            si:randomentry "W3Schools" .
+
+        <https://www.w3schools01.com> si:author "Jan Egil Refsnes" .
+        <https://www.w3schools01.com> si:title "W3Schools" .
+
+        <https://www.w3schools02.com> si:author "John Doe" ;
+            si:title "W3Schools" .
+    """,
     }
-    response = requests.post(
-        f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=data
-    )
-    assert response.status_code == 200
-
-
-@pytest.mark.contract
-def test_get_metadata(service: str) -> None:
-    """Test graph metdata."""
-    response = requests.get(
-        f"{service}/api/metadata",
-        headers={"X-API-KEY": "test-key"},
-    )
-    assert response.status_code == 200
-    # literal_eval does not fancy 'false' in json, but rather 'False'
-    content = literal_eval(response.content.decode("utf-8").replace("false", "False"))
-    assert not content["empty"]
-    assert 1665409969 < content["start_time"] < 2065409969
-
-
-@pytest.mark.contract
-def test_load_graph(service: str) -> None:
-    """Test graph retrieval."""
-    graph_id = "<http://foo/bar¡@½@$}135[¥}¡35>"
     expected = """
         @prefix si: <https://www.w3schools.com/rdf/> .
 
-        <https://digdir.no/dataset/007> si:author "James Bond" ;
-            si:title "The man!" .
-        """
-    response = requests.get(f"{service}/api/graphs?id={quote(graph_id)}")
+        <https://www.w3schools00.com> si:author "Jan Egil Refsnes" ;
+            si:randomentry "W3Schools" ;
+            si:title "W3Schools" .
+
+        <https://www.w3schools01.com> si:author "Jan Egil Refsnes" ;
+            si:title "W3Schools" .
+
+        <https://www.w3schools02.com> si:author "John Doe" ;
+            si:title "W3Schools" .
+    """
+    response = requests.post(
+        f"{service}/api/prettify", headers={"X-API-KEY": "test-key"}, json=data
+    )
+    assert response.status_code == 200
     assert response.content.decode("utf-8") == dedent(expected).strip()
 
 
 @pytest.mark.contract
-def test_load_all_graphs(service: str) -> None:
-    """Test all graphs retrieval."""
-    expected = """
-        @prefix si: <https://www.w3schools.com/rdf/> .
-
-        <https://digdir.no/dataset/007> si:author "James Bond" ;
-            si:title "The man!" .
-        """
-    response = requests.get(f"{service}/api/graphs")
-    assert response.content.decode("utf-8") == dedent(expected).strip()
-
-
-@pytest.mark.contract
-def test_sparql_query(service: str) -> None:
-    """Test sparql query."""
-    q = (
-        "PREFIX%20si%3A%20%3Chttps%3A%2F%2Fwww.w3schools.com%2Frdf%2F%3E%0ASELECT%20*%20"
-        + "WHERE%20%7B%0A%20%20%3Chttps%3A%2F%2Fdigdir.no%2Fdataset%2F007%3E%20si%3Aauthor%20%3Fobj%20.%0A%7D%20"
-        + "LIMIT%2010"
-    )
-    response = requests.get(f"{service}/api/sparql?query={q}")
-    content = literal_eval(response.content.decode("utf-8"))
-    assert content["results"]["bindings"] == [
-        {"obj": {"type": "literal", "value": "James Bond"}}
-    ]
-    assert content["head"]["vars"] == ["obj"]
-
-
-@pytest.mark.contract
-def test_sparql_query_timestamp(service: str) -> None:
-    """Test sparql query with specific timestamp."""
-    q = (
-        "PREFIX%20si%3A%20%3Chttps%3A%2F%2Fwww.w3schools.com%2Frdf%2F%3E%0ASELECT%20*%20"
-        + "WHERE%20%7B%0A%20%20%3Chttps%3A%2F%2Fdigdir.no%2Fdataset%2F007%3E%20si%3Aauthor%20%3Fobj%20.%0A%7D%20"
-        + "LIMIT%2010"
-    )
-    response = requests.get(f"{service}/api/sparql/{ceil(time.time())}?query={q}")
-    raw_content = response.content.decode("utf-8")
-    content = literal_eval(raw_content)
-    assert content["results"]["bindings"] == [
-        {"obj": {"type": "literal", "value": "James Bond"}}
-    ]
-    assert content["head"]["vars"] == ["obj"]
-
-
-@pytest.mark.contract
-def test_delete_graph_forbidden_when_missing_api_key(service: str) -> None:
-    """Test graph deletion."""
-    response = requests.delete(f"{service}/api/graphs?id=rm-rf")
-    assert response.status_code == 403
-
-
-@pytest.mark.contract
-def test_delete_graph(service: str) -> None:
-    """Test graph deletion."""
+def test_response_invalid_turtle(service: str) -> None:
+    """Test successful response with valid turtle."""
     data = {
-        "id": "rm-rf",
+        "input_format": "text/turtle",
+        "output_format": "text/turtle",
         "graph": """
         @prefix si: <https://www.w3schools.com/rdf/> .
 
-        <https://digdir.no/dataset/007> si:author "James Bond" ;
-            si:title "The man!" .
+        https://www.w3schools00.com> si:author "Jan Egil Refsnes" ;
+            si:title "W3Schools" .
+            si:randomentry "W3Schools" .
+
+        <https://www.w3schools01.com> si:author "Jan Egil Refsnes" .
+        <https://www.w3schools01.com> si:title "W3Schools" .
+
+        <https://www.w3schools02.com> si:author "John Doe" .
+            si:title "W3Schools" ;
         """,
     }
     response = requests.post(
-        f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=data
+        f"{service}/api/prettify", headers={"X-API-KEY": "test-key"}, json=data
     )
-
-    graph_id = quote("rm-rf")
-    response = requests.delete(
-        f"{service}/api/graphs?id={graph_id}", headers={"X-API-KEY": "test-key"}
-    )
-    assert response.status_code == 200
-    response = requests.get(f"{service}/api/graphs?id={graph_id}")
-    assert response.status_code == 404
-    assert response.content.decode("utf-8") == '{"message":"No such graph: \'rm-rf\'"}'
+    assert response.status_code == 500
 
 
 @pytest.mark.contract
-def test_get_at_timestamp(service: str) -> None:
-    """Get graph at specific time."""
-    graphs = []
-    graph_id = "d4t3t1m3"
+def test_response_invalid_format_definition(service: str) -> None:
+    """Test successful response with valid turtle."""
+    data = {
+        "input_format": "text/turtle",
+        "output_format": "invald_format_specification",
+        "graph": """
+        @prefix si: <https://www.w3schools.com/rdf/> .
 
-    for i in range(3):
-        data = {
-            "id": graph_id,
-            "graph": f"""
-            @prefix si: <https://www.w3schools.com/rdf/> .
+        <https://www.w3schools00.com> si:author "Jan Egil Refsnes" ;
+            si:randomentry "W3Schools" .
+            si:title "W3Schools" ;
 
-            <https://www.w3schools.com> si:author "Jan Egil Refsnes" ;
-                si:title "W3Schools{i}" .
-            """,
-        }
-        response = requests.post(
-            f"{service}/api/graphs", headers={"X-API-KEY": "test-key"}, json=data
-        )
-        assert response.status_code == 200
-
-        graphs.append((data, int(time.time())))
-        time.sleep(2)
-
-    response = requests.delete(
-        f"{service}/api/graphs?id={graph_id}", headers={"X-API-KEY": "test-key"}
+        <https://www.w3schools01.com> si:author "Jan Egil Refsnes" .
+        """,
+    }
+    response = requests.post(
+        f"{service}/api/prettify", headers={"X-API-KEY": "test-key"}, json=data
     )
-    assert response.status_code == 200
-    response = requests.get(f"{service}/api/graphs?id={graph_id}")
-    assert response.status_code == 404
-
-    for _i, (graph, t) in enumerate([*graphs, *graphs[::-1]]):
-        response = requests.get(f"{service}/api/graphs/{t}?id={graph_id}")
-        assert response.status_code == 200
-        assert response.content.decode("utf-8") == dedent(graph["graph"]).strip()
-
-    response = requests.get(f"{service}/api/graphs/{int(time.time())}?id={graph_id}")
-    assert response.status_code == 404
-    assert (
-        response.content.decode("utf-8")
-        == f'{{"message":"No such graph: \'{graph_id}\'"}}'
-    )
+    assert response.status_code == 500

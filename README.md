@@ -19,5 +19,5 @@ poetry run uvicorn rdf_diff_store.main:app --reload
 Generate code (after updating openapi spec):
 
 ```bash
-nox -s codegen
+nox -s openapi
 ```

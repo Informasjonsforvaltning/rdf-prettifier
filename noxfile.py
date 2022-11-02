@@ -141,6 +141,7 @@ def contract_tests(session: Session) -> None:
 @session(python=python_versions[0])
 def coverage(session: Session) -> None:
     """Produce the coverage report."""
+    session.skip()
     args = session.posargs or ["report"]
     session.install("coverage[toml]")
     session.run("coverage", *args)
@@ -149,6 +150,7 @@ def coverage(session: Session) -> None:
 @session(python=python_versions[0])
 def codecov(session: Session) -> None:
     """Upload coverage data."""
+    session.skip()
     session.install("coverage[toml]", "codecov")
     # See pyproject.toml for configuration
     # --fail-under=0 to NOT fail in coverage, and upload regardless of coverage percent

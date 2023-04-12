@@ -108,7 +108,9 @@ paths:
         '200':
           content:
             application/json:
-              schema: {}
+              schema:
+                title: Response Get Livez Livez Get
+                type: string
           description: Successful Response
       summary: Get Livez
   /readyz:
@@ -119,6 +121,8 @@ paths:
         '200':
           content:
             application/json:
-              schema: {}
+              schema:
+                title: Response Get Readyz Readyz Get
+                type: string
           description: Successful Response
       summary: Get Readyz

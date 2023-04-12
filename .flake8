@@ -9,17 +9,20 @@ ignore =
     I202,
     # Black will break before a binary operator.
     # This is compliant with PEP 8, W503 goes against this PEP 8 recommendation.
-    W503
+    W503,
 per-file-ignores =
     tests/*:
       # Use of assert is ok in tests (AssertionError should be used in running code).
       S101, 
       # Standard pseudo-random generators are not suitable for security/cryptographic purposes.
-      S311
+      S311,
+      # Ignore request timeout
+      S113, 
     # Generated code does not conform to standards.
     rdf_diff_store/auth.py: B008
     rdf_diff_store/main.py: B008, D100, D200, D400
     rdf_diff_store/models.py: D100, D101, D200, D400,
+
 max-line-length = 120
 import-order-style = google
 exclude =

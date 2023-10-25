@@ -10,7 +10,6 @@ nox.options.envdir = ".cache"
 # To run consecutive nox sessions faster.
 nox.options.reuse_existing_virtualenvs = False
 nox.options.sessions = (
-    "black",
     "lint",
     "mypy",
     "openapi",

@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rdf-prettifier
+  labels:
+    app: rdf-prettifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rdf-prettifier
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: rdf-prettifier
+      annotations:
+        prometheus.io/scrape: "false"
+    spec:
+      containers:
+        - name: rdf-prettifier
+          image: rdf-prettifier
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 150
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 5
+          resources:
+            requests:
+              memory: 100Mi
+              cpu: 150m
+            limits:
+              memory: 100Mi

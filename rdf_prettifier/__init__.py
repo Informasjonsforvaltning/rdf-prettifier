@@ -1,1 +1,1 @@
-"""Historical storage for rdf."""
+"""Takes RDF graphs and serves pretty printed versions of them."""

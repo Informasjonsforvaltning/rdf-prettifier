@@ -15,8 +15,9 @@ COPY --from=requirements /tmp/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 COPY ./rdf_prettifier /rdf_prettifier
+COPY ./log_conf.yaml /rdf_prettifier
 
 WORKDIR /
 
 EXPOSE 80
-CMD ["uvicorn", "rdf_prettifier.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "rdf_prettifier.main:app", "--host", "0.0.0.0", "--port", "80", "--log-config", "log_conf.conf"]

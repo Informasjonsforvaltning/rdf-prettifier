@@ -16,6 +16,7 @@ rdflib = "^7.0.0"
 types-aiofiles = "^23.2.0.0"
 aiofiles = "^23.2.1"
 pip = "^23.3.2"
+PyYAML = "^6.0.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.6.1"

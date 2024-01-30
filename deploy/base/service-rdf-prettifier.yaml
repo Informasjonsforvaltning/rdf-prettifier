@@ -5,7 +5,7 @@ metadata:
   name: rdf-prettifier
 spec:
   selector:
-    app: rdf-prettifier
+    fdk.service: rdf-prettifier
   ports:
     - name: http
       protocol: TCP

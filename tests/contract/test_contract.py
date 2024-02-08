@@ -1,4 +1,5 @@
 """Contract tests."""
+
 from textwrap import dedent
 
 import pytest

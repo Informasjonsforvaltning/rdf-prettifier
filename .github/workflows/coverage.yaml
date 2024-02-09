@@ -9,4 +9,5 @@ jobs:
       python_architecture: x64
       sessions: integration_tests
     secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

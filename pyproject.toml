@@ -13,7 +13,7 @@ fastapi = "^0.109.2"
 uvicorn = {version = "^0.27.0.post1"}
 GitPython = "^3.1.41"
 rdflib = "^7.0.0"
-types-aiofiles = "^23.2.0.20240106"
+types-aiofiles = "^23.2.0.20240311"
 aiofiles = "^23.2.1"
 pip = "^24.0"
 

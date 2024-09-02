@@ -1,6 +1,7 @@
 """Integration tests."""
 
 from textwrap import dedent
+from typing import cast
 
 from fastapi import Response
 import pytest
@@ -49,7 +50,8 @@ def test_pretty_print_turtle() -> None:
     response = prettify_graph(r, body)
     assert r.status_code == 200
     assert isinstance(response, Response)
-    assert response.body.decode("utf-8") == dedent(expected_graph).strip()
+    response_body = cast(bytes, response.body)
+    assert response_body.decode("utf-8") == dedent(expected_graph).strip()
 
 
 @pytest.mark.integration

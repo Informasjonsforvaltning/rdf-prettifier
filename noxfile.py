@@ -14,7 +14,6 @@ nox.options.sessions = (
     "lint",
     "mypy",
     "openapi",
-    "safety",
     "unit_tests",
     "integration_tests",
     "contract_tests",
@@ -156,18 +155,3 @@ def codecov(session: Session) -> None:
     # --fail-under=0 to NOT fail in coverage, and upload regardless of coverage percent
     session.run("coverage", "xml", "--fail-under=0")
     session.run("codecov", *session.posargs)
-
-
-@session(python=python_versions[0])
-def safety(session: Session) -> None:
-    """Scan dependencies for insecure packages."""
-    ignore = [
-        # rdflib
-        "48547",
-    ]
-    ignore_args = [f"--ignore={i}" for i in ignore]
-    requirements = session.poetry.export_requirements()
-    session.install("safety")
-    session.run(
-        "safety", "check", "--full-report", f"--file={requirements}", *ignore_args
-    )

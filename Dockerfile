@@ -2,7 +2,7 @@ FROM python:3.10 as requirements
 
 WORKDIR /tmp
 
-RUN pip install poetry==1.5.1
+RUN pip install poetry==1.8.3
 COPY ./pyproject.toml ./poetry.lock* ./
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
